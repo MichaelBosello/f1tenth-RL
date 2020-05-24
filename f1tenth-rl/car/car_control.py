@@ -1,6 +1,7 @@
 import rospy
 from ackermann_msgs.msg import AckermannDriveStamped
 import time
+import argparse
 
 MAX_SPEED_REDUCTION = 5
 STEERING_SPEED_REDUCTION = 5
@@ -44,9 +45,13 @@ class Drive():
     self.drive_publisher.publish(ack_msg)
 
 if __name__ == '__main__':
+  parser = argparse.ArgumentParser()
+  parser.add_argument("--simulator", action='store_true', help="to set the use of the simulator")
+  args = parser.parse_args()
+
   run_seconds = 0.6
   rospy.init_node('drive_test')
-  drive = Drive()
+  drive = Drive(args.simulator)
   while True:
     print("Write command")
     cmd = input()
@@ -69,6 +74,9 @@ if __name__ == '__main__':
     if cmd == "dd":
       while time.time() - start < run_seconds:
         drive.right()
+    if cmd == " ":
+      while time.time() - start < run_seconds:
+        drive.stop()
     if cmd == "c":
       exit()            
 
