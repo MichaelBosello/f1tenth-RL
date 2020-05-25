@@ -3,12 +3,12 @@ from sensor_msgs.msg import LaserScan
 import time
 
 class Sensors():
-  def __init__(self):
-    self.lidar_data = None
-    rospy.Subscriber("scan", LaserScan, self.lidar_callback)
+    def __init__(self):
+        self.lidar_data = None
+        rospy.Subscriber("scan", LaserScan, self.lidar_callback)
 
-  def lidar_callback(self, lidar_data):
-      self.lidar_data = lidar_data
+    def lidar_callback(self, lidar_data):
+        self.lidar_data = lidar_data
 
 if __name__ == '__main__':
     rospy.init_node('sensors_test')
