@@ -41,7 +41,7 @@ class DeepQNetwork:
         self.sess = tf.Session()
         
         assert (len(tf.compat.v1.global_variables()) == 0),"Expected zero variables"
-        self.x, self.y = self.buildNetwork('policy', True, numActions)
+        self.x, self.y = self.buildNetwork('policy', True, numActions, stateSize)
         assert (len(tf.compat.v1.trainable_variables()) == 10),"Expected 10 trainable_variables"
         assert (len(tf.compat.v1.global_variables()) == 10),"Expected 10 total variables"
         self.x_target, self.y_target = self.buildNetwork('target', False, numActions, stateSize)
@@ -94,7 +94,7 @@ class DeepQNetwork:
         print("Building network for %s trainable=%s" % (name, trainable))
 
         # First layer takes a screen, and shrinks by 2x
-        x = tf.compat.v1.placeholder(tf.uint8, shape=[None, stateSize, self.step_frames], name="screens")
+        x = tf.compat.v1.placeholder(tf.float32, shape=[None, stateSize, self.step_frames], name="screens")
         print(x)
 
         # Second layer convolves 32 8x8 filters with stride 4 with relu

@@ -3,6 +3,8 @@ import os
 import random
 import time
 
+import rospy
+
 from state import State
 from car.car_control import Drive
 from car.safety_control import SafetyControl
@@ -13,10 +15,11 @@ MAX_STOP = 3
 class CarEnv:
     
     def __init__(self, args):
-
+        rospy.init_node('rl_driver')
         self.control = Drive(is_simulator=args.simulator)
         self.safety_control = SafetyControl(is_simulator=args.simulator)
         self.sensors = Sensors()
+        time.sleep(3)
         self.step_frames = args.frame
 
         self.action_set = [0, 1, 2, 3, 4, 5]
@@ -42,7 +45,7 @@ class CarEnv:
             self.frame_number += 1
             self.episode_frame_number +=1
 
-            self.state = self.state = self.state.state_by_adding_data(self._get_car_state)
+            self.state = self.state.state_by_adding_data(self._get_car_state)
 
             if self.safety_control.emergency_brake:
                 self.safety_control.unlock_brake()
@@ -92,7 +95,7 @@ class CarEnv:
         if self.is_terminal:
             self.game_number += 1
             self.is_terminal = False
-        self.state = self.state.state_by_adding_data(self._get_car_state)
+        self.state = State().state_by_adding_data(self._get_car_state)
         self.game_score = 0
         self.episode_step_number = 0
         self.episode_frame_number = 0
@@ -100,14 +103,14 @@ class CarEnv:
         self.prev_action = None
 
     def _get_car_state(self):
-        current_data = self.sensors.get_lidar_ranges()
+        current_data = list(self.sensors.get_lidar_ranges())
         current_data.append(self.sensors.get_car_linear_acelleration())
         current_data.append(self.sensors.get_car_angular_acelleration())
         return current_data
 
 
     def get_state_size(self):
-        return len(self._get_car_state)
+        return len(self._get_car_state())
 
     def get_num_actions(self):
         return len(self.action_set)

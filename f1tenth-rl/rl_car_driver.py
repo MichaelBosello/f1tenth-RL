@@ -72,7 +72,7 @@ os.makedirs(base_output_dir)
 State.setup(args)
 
 environment = CarEnv(args)
-dqn = dqn.DeepQNetwork(environment.get_num_actions(), environment.get_state_size, base_output_dir, args)
+dqn = dqn.DeepQNetwork(environment.get_num_actions(), environment.get_state_size(), base_output_dir, args)
 replay_memory = replay.ReplayMemory(args)
 
 train_epsilon = args.epsilon #don't want to reset epsilon between epoch
