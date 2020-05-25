@@ -9,6 +9,7 @@ LIGHTLY_STEERING_REDUCTION = 2.4
 
 class Drive():
     def __init__(self, is_simulator=False):
+        self.is_simulator = is_simulator
         topic = "/vesc/high_level/ackermann_cmd_mux/input/nav_0"
         if is_simulator:
             topic = "/drive"
@@ -44,6 +45,12 @@ class Drive():
         ack_msg.drive.steering_angle = steering_angle
         self.drive_publisher.publish(ack_msg)
 
+    def backward_until_obstacle(self):
+        if self.is_simulator:
+            pass
+        else:
+            pass
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--simulator", action='store_true', help="to set the use of the simulator")
@@ -77,6 +84,8 @@ if __name__ == '__main__':
         if cmd == " ":
             while time.time() - start < run_seconds:
                 drive.stop()
+        if cmd == "buo":
+            drive.backward_until_obstacle()
         if cmd == "c":
             exit()            
 
