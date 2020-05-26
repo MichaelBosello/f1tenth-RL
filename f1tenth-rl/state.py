@@ -5,7 +5,7 @@ class State:
     @staticmethod
     def setup(args):
         State.use_compression = args.compress_replay
-        State.step_frames = args.frame
+        State.history_length = args.history_length
         if State.use_compression:
             import blosc
 
@@ -16,23 +16,21 @@ class State:
 
         new_state = State()
         if hasattr(self, 'data'):
-            new_state.data = self.data[:State.step_frames -1]
+            new_state.data = self.data[:State.history_length -1]
             new_state.data.insert(0, data)
         else:
             new_state.data = []
-            for i in range(State.step_frames):
+            for i in range(State.history_length):
                 new_state.data.append(data)
         return new_state
     
     def get_data(self):
         if State.use_compression:
             state = []
-            for i in range(State.step_frames):
+            for i in range(State.history_length):
                 state.append(np.fromstring(
                     blosc.decompress(self.data[i]),
                 dtype=np.float32))
         else:
             state = self.data
-        if State.step_frames == 1:
-            return state[0]
-        return np.concatenate(state)
+        return state

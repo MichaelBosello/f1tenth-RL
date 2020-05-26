@@ -20,7 +20,7 @@ class CarEnv:
         self.safety_control = SafetyControl(is_simulator=args.simulator)
         self.sensors = Sensors()
         time.sleep(3)
-        self.step_frames = args.frame
+        self.history_length = args.history_length
 
         self.action_set = [0, 1, 2, 3, 4, 5]
 
@@ -41,7 +41,7 @@ class CarEnv:
         self.step_number += 1
         self.episode_step_number += 1
 
-        for i in range(0, self.step_frames):
+        for i in range(0, self.history_length):
             self.frame_number += 1
             self.episode_frame_number +=1
 
@@ -55,7 +55,7 @@ class CarEnv:
                 self.is_terminal = True
                 return reward, self.state, self.is_terminal
 
-            if self.car_stop_count >= MAX_STOP * self.step_frames:
+            if self.car_stop_count >= MAX_STOP * self.history_length:
                 action = 0
 
             reward = 0

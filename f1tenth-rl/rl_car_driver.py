@@ -28,13 +28,13 @@ parser.add_argument("--epsilon", type=float, default=1, help="]0, 1]for epsilon 
 parser.add_argument("--epsilon-decay", type=float, default=0.99988, help="]0, 1] every step epsilon = epsilon * decay, in order to decrease constantly")
 parser.add_argument("--epsilon-min", type=float, default=0.1, help="epsilon with decay doesn't fall below epsilon min")
 
-parser.add_argument("--observation-steps", type=int, default=350, help="train only after this many stesp (=X frames)")
+parser.add_argument("--observation-steps", type=int, default=350, help="train only after this many steps (1 step = [history-length] frames)")
 parser.add_argument("--target-model-update-freq", type=int, default=300, help="how often (in steps) to update the target model")
 parser.add_argument("--model", help="tensorflow model checkpoint file to initialize from")
-parser.add_argument("--frame", type=int, default=2, help="frame per step")
+parser.add_argument("--history-length", type=int, default=2, help="length of history used in the dqn. An action is performed [history-length] time")
 # train parameters
-parser.add_argument("--train-epoch-steps", type=int, default=5000, help="how many steps (=X frames) to run during a training epoch")
-parser.add_argument("--eval-epoch-steps", type=int, default=500, help="how many steps (=X frames) to run during an eval epoch")
+parser.add_argument("--train-epoch-steps", type=int, default=5000, help="how many steps (1 step = [history-length] frames) to run during a training epoch")
+parser.add_argument("--eval-epoch-steps", type=int, default=500, help="how many steps (1 step = [history-length] frames) to run during an eval epoch")
 parser.add_argument("--replay-capacity", type=int, default=100000, help="how many states to store for future training")
 parser.add_argument("--prioritized-replay", action='store_true', help="Prioritize interesting states when training (e.g. terminal or non zero rewards)")
 parser.add_argument("--compress-replay", action='store_true', help="if set replay memory will be compressed with blosc, allowing much larger replay capacity")
@@ -118,7 +118,7 @@ def run_epoch(min_epoch_steps, eval_with_epsilon=None):
             if is_training and old_state is not None:
                 replay_memory.add_sample(replay.Sample(old_state, action, reward, state, is_terminal))
 
-                if environment.get_step_number() > args.observation_steps and environment.get_episode_step_number() % args.frame == 0:
+                if environment.get_step_number() > args.observation_steps and environment.get_episode_step_number() % args.history_length == 0:
                     batch = replay_memory.draw_batch(32)
                     dqn.train(batch, environment.get_step_number())
 

@@ -4,11 +4,11 @@ import random
 
 class Sample:
     
-    def __init__(self, state1, action, reward, state2, terminal):
-        self.state1 = state1
+    def __init__(self, old_state, action, reward, new_state, terminal):
+        self.old_state = old_state
         self.action = action
         self.reward = reward
-        self.state2 = state2
+        self.new_state = new_state
         self.terminal = terminal
         self.weight = 1
         self.cumulative_weight = 1
