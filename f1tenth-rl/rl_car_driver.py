@@ -9,10 +9,12 @@ import replay
 import time
 import argparse
 import datetime
+import tensorflow as tf
 
 import dqn
 from car_env import CarEnv
 from state import State
+
 
 #################################
 # parameters
@@ -27,6 +29,7 @@ parser.add_argument("--gamma", type=float, default=0.996, help="gamma [0, 1] is 
 parser.add_argument("--epsilon", type=float, default=1, help="]0, 1]for epsilon greedy train")
 parser.add_argument("--epsilon-decay", type=float, default=0.99988, help="]0, 1] every step epsilon = epsilon * decay, in order to decrease constantly")
 parser.add_argument("--epsilon-min", type=float, default=0.1, help="epsilon with decay doesn't fall below epsilon min")
+parser.add_argument("--batch-size", type=float, default=32, help="size of the batch used in gradient descent")
 
 parser.add_argument("--observation-steps", type=int, default=350, help="train only after this many steps (1 step = [history-length] frames)")
 parser.add_argument("--target-model-update-freq", type=int, default=300, help="how often (in steps) to update the target model")
@@ -40,7 +43,6 @@ parser.add_argument("--prioritized-replay", action='store_true', help="Prioritiz
 parser.add_argument("--compress-replay", action='store_true', help="if set replay memory will be compressed with blosc, allowing much larger replay capacity")
 parser.add_argument("--normalize-weights", action='store_true', help="if set weights/biases are normalized like torch, with std scaled by fan in to the node")
 parser.add_argument("--save-model-freq", type=int, default=2000, help="save the model once per X training sessions")
-parser.add_argument("--tensorboard-logging-freq", type=int, default=300, help="save training statistics once every X steps")
 args = parser.parse_args()
 
 print('Arguments: ', (args))
@@ -68,6 +70,10 @@ process.start()
 
 base_output_dir = 'run-out-' + time.strftime("%Y-%m-%d-%H-%M-%S")
 os.makedirs(base_output_dir)
+tensorboard_dir = base_output_dir
+summary_writer = tf.summary.create_file_writer(tensorboard_dir)
+with summary_writer.as_default():
+    tf.summary.text('params', str(args), step=0)
 
 State.setup(args)
 
@@ -88,11 +94,13 @@ def run_epoch(min_epoch_steps, eval_with_epsilon=None):
     step_start = environment.get_step_number()
     start_game_number = environment.get_game_number()
     epoch_total_score = 0
+    episode_reward_list = []
 
     while environment.get_step_number() - step_start < min_epoch_steps and not stop:
         state_reward = 0
         state = None
         
+        episode_losses = []
         while not environment.is_game_over() and not stop:
             # epsilon selection and update
             if is_training:
@@ -119,19 +127,31 @@ def run_epoch(min_epoch_steps, eval_with_epsilon=None):
                 replay_memory.add_sample(replay.Sample(old_state, action, reward, state, is_terminal))
 
                 if environment.get_step_number() > args.observation_steps and environment.get_episode_step_number() % args.history_length == 0:
-                    batch = replay_memory.draw_batch(32)
-                    dqn.train(batch, environment.get_step_number())
+                    batch = replay_memory.draw_batch(args.batch_size)
+                    loss = dqn.train(batch, environment.get_step_number())
+                    episode_losses.append(loss)
 
             if is_terminal:
                 state = None
 
         episode_time = datetime.datetime.now() - start_time
-        print('%s %d ended with score: %d (%s elapsed)' %
-            ('Episode' if is_training else 'Eval', environment.get_game_number(), environment.get_game_score(), str(episode_time)))
+        log = ('%s %d ended with score: %d (%s elapsed). Total loss: %d' %
+            ('Episode' if is_training else 'Eval', environment.get_game_number(), environment.get_game_score(), str(episode_time), episode_loss))
+        print(log)
         if is_training:
           print("epsilon " + str(train_epsilon))
+
+        episode_reward_list.append(environment.get_game_score())
+        avg_rewards = episode_reward_list[max(0, environment.get_game_number() - 100):(n + 1)].mean()
+        with summary_writer.as_default():
+            tf.summary.text('log', log, step=environment.get_game_number())
+            tf.summary.scalar('episode reward', environment.get_game_score(), step=environment.get_game_number())
+            tf.summary.scalar('running avg reward(100)', avg_rewards, step=environment.get_game_number())
+            tf.summary.scalar('average loss)', np.mean(episode_losses), step=environment.get_game_number())
+
         epoch_total_score += environment.get_game_score()
         environment.reset_game()
+
     
     # return the average score
     if environment.get_game_number() - start_game_number == 0:
@@ -144,6 +164,6 @@ def run_epoch(min_epoch_steps, eval_with_epsilon=None):
 
 while not stop:
     avg_score = run_epoch(args.train_epoch_steps) # train
-    print('Average training score: %d' % (avg_score))
+    print('Average epoch training score: %d' % (avg_score))
     avg_score = run_epoch(args.eval_epoch_steps, eval_with_epsilon=.0) # eval
-    print('Average eval score: %d' % (avg_score))
+    print('Average epoch eval score: %d' % (avg_score))
