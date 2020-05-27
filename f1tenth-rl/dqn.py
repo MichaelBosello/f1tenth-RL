@@ -18,7 +18,7 @@ class DeepQNetwork:
         self.gamma = args.gamma
         self.target_model_update_freq = args.target_model_update_freq
 
-        self.checkpoint_dir = base_dir + '/models'
+        self.checkpoint_dir = base_dir + '/models/'
         self.save_model_freq = args.save_model_freq
 
         if not os.path.isdir(self.checkpoint_dir):
