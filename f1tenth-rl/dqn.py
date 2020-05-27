@@ -2,6 +2,7 @@ import math
 import numpy as np
 import os
 import tensorflow as tf
+from tensorflow.keras import layers
 
 import state
 from state import State
@@ -13,51 +14,73 @@ class DeepQNetwork:
         self.state_size = state_size
         self.history_length = args.history_length
 
+        self.learning_rate = args.learning_rate
         self.gamma = args.gamma
         self.target_model_update_freq = args.target_model_update_freq
-        self.normalize_weights = args.normalize_weights
 
-        self.base_dir = base_dir
+        self.checkpoint_dir = base_dir + '/models'
         self.save_model_freq = args.save_model_freq
-        self.tensorboard_freq = args.tensorboard_logging_freq
+
+        if not os.path.isdir(self.checkpoint_dir):
+            os.makedirs(self.checkpoint_dir)
 
 
-        self.behavior_net = self.build_q_net()
-        self.target_net = self.build_q_net()
+        self.behavior_net = self.__build_q_net()
+        self.target_net = self.__build_q_net()
 
         if args.model is not None:
-            pass #load
-        else:
-            pass #new
-    def build_q_net(self):
-        pass
+            self.target_net.load_weights(args.model)
+            self.behavior_net.set_weights(self.target_net.get_weights())
+
+
+    def __build_q_net(self):
+        inputs = tf.keras.Input(shape=(self.history_length, self.state_size))
+        x = layers.Flatten()(inputs)
+        x = layers.Dense(100, activation='relu',
+            kernel_initializer='RandomUniform', bias_regularizer=tf.keras.regularizers.l2(0.01))(x)
+        x = layers.Dense(100, activation='relu',
+            kernel_initializer='RandomUniform', bias_regularizer=tf.keras.regularizers.l2(0.01))(x)
+        predictions = layers.Dense(self.num_actions, activation='relu',
+            kernel_initializer='RandomUniform', bias_regularizer=tf.keras.regularizers.l2(0.01))(x)
+        model = tf.keras.Model(inputs=inputs, outputs=predictions)
+
+        model.compile(optimizer=tf.keras.optimizers.RMSprop(self.learning_rate, clipvalue=1, decay=.95, epsilon=.01))
+        print(model.summary())
+        return model
+
+
         
     def inference(self, state):
-        pass
+        state = np.asarray(state).reshape((-1, self.history_length, self.state_size))
+        q_vals = self.behavior_net.predict(state)[0]
+        return q_vals.argmax()
+
         
     def train(self, batch, step_number):
 
-        old_states = [b.old_state.get_data() for b in batch]
-        new_states = [b.new_state.get_data() for b in batch]
+        old_states = np.asarray([sample.old_state.get_data() for sample in batch])
+        new_states = np.asarray([sample.new_state.get_data() for sample in batch])
+        actions = np.asarray([sample.action for sample in batch])
+        rewards = np.asarray([sample.reward for sample in batch])
+        is_terminal = np.asarray([sample.terminal for sample in batch])
 
-        actions = np.zeros((len(batch), self.num_actions))
-        updates = np.zeros(len(batch))
-        
-        for i in range(0, len(batch)):
-            actions[i, batch[i].action] = 1
-            if batch[i].terminal:
-                updates[i] = batch[i].reward
-            else:
-                updates[i] = batch[i].reward + self.gamma * np.max(y2[i])
+        q_new_state = self.target_net.predict(new_states).argmax(axis=1)
+        target_q = np.where(is_terminal, rewards, rewards+self.gamma*q_new_state)
 
-        if  step_number % self.tensorboard_freq == 0:
-            pass #log
+        with tf.GradientTape() as tape:
+            q_values = self.target_net.predict(old_states)
+            one_hot_actions = tf.one_hot(actions, self.num_actions)
+            current_q = tf.reduce_sum(tf.multiply(q_values, one_hot_actions), axis=1)
+            loss = tf.reduce_mean(tf.square(target_q - current_q))
+
+        variables = self.target_net.trainable_variables
+        gradients = tape.gradient(loss, variables)
+        self.target_net.optimizer.apply_gradients(zip(gradients, variables))
 
         if step_number % self.target_model_update_freq == 0:
-          pass #copy target
+            self.behavior_net.set_weights(self.target_net.get_weights())
 
         if step_number % self.save_model_freq == 0:
-            dir = self.base_dir + '/models'
-            if not os.path.isdir(dir):
-                os.makedirs(dir)
-            # save model
+            self.target_net.save_weights(checkpoint_dir)
+
+        return loss
