@@ -140,7 +140,7 @@ def run_epoch(min_epoch_steps, eval_with_epsilon=None):
         else:
             episode_avg_loss = np.mean(episode_losses)
 
-        log = ('%s %d ended with score: %d (%s elapsed). Total loss: %d' %
+        log = ('%s %d ended with score: %d (%s elapsed). Avg loss: %d' %
             ('Episode' if is_training else 'Eval', environment.get_game_number(), environment.get_game_score(), str(episode_time), episode_avg_loss))
         print(log)
         if is_training:
