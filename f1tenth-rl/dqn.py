@@ -68,7 +68,7 @@ class DeepQNetwork:
         target_q = np.where(is_terminal, rewards, rewards+self.gamma*q_new_state)
 
         with tf.GradientTape() as tape:
-            q_values = self.target_net.predict(old_states)
+            q_values = self.target_net(old_states)
             one_hot_actions = tf.one_hot(actions, self.num_actions)
             current_q = tf.reduce_sum(tf.multiply(q_values, one_hot_actions), axis=1)
             loss = tf.reduce_mean(tf.square(target_q - current_q))
