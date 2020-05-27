@@ -81,6 +81,6 @@ class DeepQNetwork:
             self.behavior_net.set_weights(self.target_net.get_weights())
 
         if step_number % self.save_model_freq == 0:
-            self.target_net.save_weights(checkpoint_dir)
+            self.target_net.save_weights(self.checkpoint_dir)
 
         return loss
