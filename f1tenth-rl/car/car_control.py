@@ -1,5 +1,7 @@
 import rospy
 from ackermann_msgs.msg import AckermannDriveStamped
+from geometry_msgs.msg import PoseStamped
+
 import time
 import argparse
 
@@ -17,6 +19,9 @@ class Drive():
         self.max_steering = rospy.get_param("max_steering", 0.34)
         print("max_speed: ", self.max_speed, ", max_steering: ", self.max_steering)
         self.drive_publisher = rospy.Publisher(topic, AckermannDriveStamped, queue_size=0)
+
+        if self.is_simulator:
+            self.reset_publisher = rospy.Publisher("/pose", PoseStamped, queue_size=0)
 
     def forward(self):
         self.send_drive_command(self.max_speed/MAX_SPEED_REDUCTION, 0)
@@ -47,7 +52,7 @@ class Drive():
 
     def backward_until_obstacle(self):
         if self.is_simulator:
-            pass
+            self.reset_publisher.publish(PoseStamped())
         else:
             pass
 
