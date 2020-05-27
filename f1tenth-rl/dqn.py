@@ -43,23 +43,22 @@ class DeepQNetwork:
 
 
     def __build_q_net(self):
-        inputs = tf.keras.Input(shape=(self.history_length, self.state_size))
-        x = layers.Flatten()(inputs)
-        x = layers.Dense(200, activation='relu',
-            kernel_initializer='RandomUniform', bias_regularizer=tf.keras.regularizers.l2(0.01))(x)
-        x = layers.Dense(100, activation='relu',
-            kernel_initializer='RandomUniform', bias_regularizer=tf.keras.regularizers.l2(0.01))(x)
-        predictions = layers.Dense(self.num_actions, activation='relu',
-            kernel_initializer='RandomUniform', bias_regularizer=tf.keras.regularizers.l2(0.01))(x)
+        inputs = tf.keras.Input(shape=(self.state_size, self.history_length))
+        x = layers.Conv1D(filters=64, kernel_size=10, activation='relu')(inputs)
+        x = layers.MaxPooling1D(pool_size=3)(x)
+        x = layers.Conv1D(filters=128, kernel_size=10, activation='relu')(x)
+        x = layers.GlobalAveragePooling1D()(x)
+        x = layers.Dropout(0.5)(x)
+        predictions = layers.Dense(self.num_actions, activation='linear')(x)
         model = tf.keras.Model(inputs=inputs, outputs=predictions)
-        model.compile(optimizer=tf.keras.optimizers.RMSprop(self.learning_rate, clipvalue=1, decay=.95, epsilon=.01))
+        model.compile(optimizer=tf.keras.optimizers.Adam(self.learning_rate, decay=.98))
         model.summary()
         return model
 
 
         
     def inference(self, state):
-        state = np.asarray(state).reshape((-1, self.history_length, self.state_size))
+        state = np.asarray(state).reshape((-1, self.state_size, self.history_length))
         q_vals = self.behavior_net.predict(state)[0]
         return q_vals.argmax()
 

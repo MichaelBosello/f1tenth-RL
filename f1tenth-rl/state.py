@@ -36,4 +36,4 @@ class State:
                 dtype=np.float32))
         else:
             state = self.data
-        return state
+        return np.transpose(state, axes=(1,0))
