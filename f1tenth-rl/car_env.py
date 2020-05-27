@@ -45,7 +45,7 @@ class CarEnv:
             self.frame_number += 1
             self.episode_frame_number +=1
 
-            self.state = self.state.state_by_adding_data(self._get_car_state)
+            self.state = self.state.state_by_adding_data(self._get_car_state())
 
             if self.safety_control.emergency_brake:
                 self.safety_control.unlock_brake()
@@ -95,7 +95,7 @@ class CarEnv:
         if self.is_terminal:
             self.game_number += 1
             self.is_terminal = False
-        self.state = State().state_by_adding_data(self._get_car_state)
+        self.state = State().state_by_adding_data(self._get_car_state())
         self.game_score = 0
         self.episode_step_number = 0
         self.episode_frame_number = 0
