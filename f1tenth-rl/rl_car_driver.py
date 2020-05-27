@@ -135,19 +135,24 @@ def run_epoch(min_epoch_steps, eval_with_epsilon=None):
                 state = None
 
         episode_time = datetime.datetime.now() - start_time
+        if not episode_losses:
+            episode_avg_loss = 0
+        else:
+            episode_avg_loss = np.mean(episode_losses)
+
         log = ('%s %d ended with score: %d (%s elapsed). Total loss: %d' %
-            ('Episode' if is_training else 'Eval', environment.get_game_number(), environment.get_game_score(), str(episode_time), episode_loss))
+            ('Episode' if is_training else 'Eval', environment.get_game_number(), environment.get_game_score(), str(episode_time), episode_avg_loss))
         print(log)
         if is_training:
           print("epsilon " + str(train_epsilon))
 
         episode_reward_list.append(environment.get_game_score())
-        avg_rewards = episode_reward_list[max(0, environment.get_game_number() - 100):(n + 1)].mean()
+        avg_rewards = np.mean(episode_reward_list[max(0, environment.get_game_number() - 100):(environment.get_game_number() + 1)])
         with summary_writer.as_default():
             tf.summary.text('log', log, step=environment.get_game_number())
             tf.summary.scalar('episode reward', environment.get_game_score(), step=environment.get_game_number())
             tf.summary.scalar('running avg reward(100)', avg_rewards, step=environment.get_game_number())
-            tf.summary.scalar('average loss)', np.mean(episode_losses), step=environment.get_game_number())
+            tf.summary.scalar('average loss', episode_avg_loss, step=environment.get_game_number())
 
         epoch_total_score += environment.get_game_score()
         environment.reset_game()
