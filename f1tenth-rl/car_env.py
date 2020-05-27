@@ -73,7 +73,7 @@ class CarEnv:
                 reward = 0.2
             elif action == 5:
                 self.control.stop()
-                reward = -0.01
+                reward = -0.1
                 self.car_stop_count += 1
             else:
                 raise ValueError('`action` should be between 0 and ' + str(len(self.action_set)-1))

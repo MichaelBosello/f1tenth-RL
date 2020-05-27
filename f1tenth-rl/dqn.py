@@ -28,6 +28,15 @@ class DeepQNetwork:
         self.behavior_net = self.__build_q_net()
         self.target_net = self.__build_q_net()
 
+        model_as_string = []
+        self.target_net.summary(print_fn=lambda x : model_as_string.append(x))
+        "\n".join(model_as_string)
+
+        summary_writer = tf.summary.create_file_writer(base_dir)
+        with summary_writer.as_default():
+            tf.summary.text('model', model_as_string, step=0)
+            
+
         if args.model is not None:
             self.target_net.load_weights(args.model)
             self.behavior_net.set_weights(self.target_net.get_weights())
@@ -36,16 +45,15 @@ class DeepQNetwork:
     def __build_q_net(self):
         inputs = tf.keras.Input(shape=(self.history_length, self.state_size))
         x = layers.Flatten()(inputs)
-        x = layers.Dense(100, activation='relu',
+        x = layers.Dense(200, activation='relu',
             kernel_initializer='RandomUniform', bias_regularizer=tf.keras.regularizers.l2(0.01))(x)
         x = layers.Dense(100, activation='relu',
             kernel_initializer='RandomUniform', bias_regularizer=tf.keras.regularizers.l2(0.01))(x)
         predictions = layers.Dense(self.num_actions, activation='relu',
             kernel_initializer='RandomUniform', bias_regularizer=tf.keras.regularizers.l2(0.01))(x)
         model = tf.keras.Model(inputs=inputs, outputs=predictions)
-
         model.compile(optimizer=tf.keras.optimizers.RMSprop(self.learning_rate, clipvalue=1, decay=.95, epsilon=.01))
-        print(model.summary())
+        model.summary()
         return model
 
 
