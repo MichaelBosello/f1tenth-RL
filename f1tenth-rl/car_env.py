@@ -55,9 +55,6 @@ class CarEnv:
                 self.is_terminal = True
                 return reward, self.state, self.is_terminal
 
-            if self.car_stop_count >= MAX_STOP * self.history_length:
-                action = 0
-
             reward = 0
             if action == 0:
                 self.control.forward()
@@ -76,13 +73,16 @@ class CarEnv:
                 reward = 0.2
             elif action == 5:
                 self.control.stop()
-                reward = 0
+                reward = -0.01
                 self.car_stop_count += 1
             else:
                 raise ValueError('`action` should be between 0 and ' + str(len(self.action_set)-1))
 
             if action != 5:
                 self.car_stop_count = 0
+
+            if self.car_stop_count > MAX_STOP * self.history_length:
+                self.control.forward()
 
 
         self.game_score += reward
