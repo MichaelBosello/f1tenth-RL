@@ -1,27 +1,34 @@
 import rospy
 from ackermann_msgs.msg import AckermannDriveStamped
-from geometry_msgs.msg import PoseStamped
 
 import time
 import argparse
+
+try:
+    import Jetson.GPIO as GPIO
+except ImportError:
+    pass
 
 MAX_SPEED_REDUCTION = 5
 STEERING_SPEED_REDUCTION = 5
 LIGHTLY_STEERING_REDUCTION = 2.4
 
+LX_IR_SENSOR_PIN = 1
+RX_IR_SENSOR_PIN = 0
+
 class Drive():
     def __init__(self, is_simulator=False):
         self.is_simulator = is_simulator
-        topic = "/vesc/high_level/ackermann_cmd_mux/input/nav_0"
-        if is_simulator:
-            topic = "/drive"
+        topic = "/drive"
+        if not is_simulator:
+            topic = "/vesc/high_level/ackermann_cmd_mux/input/nav_0"
+            GPIO.setmode(GPIO.BCM)
+            GPIO.setup(LX_IR_SENSOR_PIN, GPIO.IN)
+            GPIO.setup(RX_IR_SENSOR_PIN, GPIO.IN)
         self.max_speed = rospy.get_param("max_speed", 5)
         self.max_steering = rospy.get_param("max_steering", 0.34)
         print("max_speed: ", self.max_speed, ", max_steering: ", self.max_steering)
         self.drive_publisher = rospy.Publisher(topic, AckermannDriveStamped, queue_size=0)
-
-        if self.is_simulator:
-            self.reset_publisher = rospy.Publisher("/pose", PoseStamped, queue_size=0)
 
     def forward(self):
         self.send_drive_command(self.max_speed/MAX_SPEED_REDUCTION, 0)
@@ -52,9 +59,13 @@ class Drive():
 
     def backward_until_obstacle(self):
         if self.is_simulator:
-            self.reset_publisher.publish(PoseStamped())
+            self.backward()
+            time.sleep(1)
+            self.stop()
         else:
-            pass
+            while not self.GPIO.input(LX_IR_SENSOR_PIN) == self.GPIO.LOW
+                    and not self.GPIO.input(RX_IR_SENSOR_PIN) == self.GPIO.LOW:
+                self.backward()
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
