@@ -91,6 +91,6 @@ if __name__ == '__main__':
                 drive.stop()
         if cmd == "buo":
             drive.backward_until_obstacle()
-        if cmd == "c":
+        if cmd == "q":
             exit()            
 
