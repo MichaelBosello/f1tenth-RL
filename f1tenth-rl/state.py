@@ -1,13 +1,16 @@
 import numpy as np
 
+try:
+    import blosc
+except ImportError:
+    pass
+
 class State:
 
     @staticmethod
     def setup(args):
         State.use_compression = args.compress_replay
         State.history_length = args.history_length
-        if State.use_compression:
-            import blosc
 
     def state_by_adding_data(self, data):
         
