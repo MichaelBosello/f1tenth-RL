@@ -9,18 +9,20 @@ try:
 except ImportError:
     from sensors import Sensors
 
-MAX_SPEED_REDUCTION = 5
-STEERING_SPEED_REDUCTION = 5
+MAX_SPEED_REDUCTION = 6
+STEERING_SPEED_REDUCTION = 6
+BACKWARD_SPEED_REDUCTION = 15
 LIGHTLY_STEERING_REDUCTION = 2.4
 
 class Drive():
     def __init__(self, is_simulator=False):
         self.is_simulator = is_simulator
-        topic = "/drive"
-        max_steering = 0.4189
         if not is_simulator:
             topic = "/vesc/high_level/ackermann_cmd_mux/input/nav_0"
             max_steering = 0.34
+        else:
+            topic = "/drive"
+            max_steering = 0.4189
         self.max_speed = rospy.get_param("max_speed", 5)
         self.max_steering = rospy.get_param("max_steering", max_steering)
         self.drive_publisher = rospy.Publisher(topic, AckermannDriveStamped, queue_size=0)
@@ -61,7 +63,7 @@ class Drive():
             self.stop()
         else:
             while not self.sensors.back_obstacle():
-                self.backward()
+                self.send_drive_command(-self.max_speed/BACKWARD_SPEED_REDUCTION, 0)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()

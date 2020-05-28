@@ -13,14 +13,19 @@ except ImportError:
     from sensors import Sensors
     from car_control import Drive
 
-TTC_THRESHOLD = 0.6
+TTC_THRESHOLD_SIM = 0.5
+TTC_THRESHOLD_REAL_CAR = 0.6
 
 class SafetyControl():
     def __init__(self, is_simulator=False):
         self.emergency_brake = False
         self.drive = Drive(is_simulator)
-        self.sensors = Sensors(is_simulator, self.lidar_callback)
-
+        self.sensors = Sensors(is_simulator)
+        self.sensors.add_lidar_callback(self.lidar_callback)
+        if not is_simulator:
+            self.ttc_treshold = TTC_THRESHOLD_REAL_CAR
+        else:
+            self.ttc_treshold = TTC_THRESHOLD_SIM
     def lidar_callback(self, lidar_data):
         acelleration = self.sensors.get_car_linear_acelleration()
         if acelleration != 0:
@@ -29,7 +34,7 @@ class SafetyControl():
                 proj_velocity = acelleration * math.cos(angle)
                 if proj_velocity != 0:
                     ttc = lidar_data.ranges[i] / proj_velocity
-                    if ttc < TTC_THRESHOLD and ttc >= 0:
+                    if ttc < self.ttc_treshold and ttc >= 0:
                         self.emergency_brake = True
                         break
         if self.emergency_brake:
@@ -47,7 +52,7 @@ if __name__ == '__main__':
     safety_control = SafetyControl(args.simulator)
     time.sleep(0.5)
     while not safety_control.emergency_brake:
-        safety_control.drive.lightly_right()
+        safety_control.drive.forward()
         time.sleep(0.01)
     safety_control.drive.stop()
     safety_control.unlock_brake()
