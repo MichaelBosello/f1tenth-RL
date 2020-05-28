@@ -20,13 +20,15 @@ class Drive():
     def __init__(self, is_simulator=False):
         self.is_simulator = is_simulator
         topic = "/drive"
+        max_steering = 0.4189
         if not is_simulator:
             topic = "/vesc/high_level/ackermann_cmd_mux/input/nav_0"
             GPIO.setmode(GPIO.BCM)
             GPIO.setup(LX_IR_SENSOR_PIN, GPIO.IN)
             GPIO.setup(RX_IR_SENSOR_PIN, GPIO.IN)
+            max_steering = 0.34
         self.max_speed = rospy.get_param("max_speed", 5)
-        self.max_steering = rospy.get_param("max_steering", 0.34)
+        self.max_steering = rospy.get_param("max_steering", max_steering)
         print("max_speed: ", self.max_speed, ", max_steering: ", self.max_steering)
         self.drive_publisher = rospy.Publisher(topic, AckermannDriveStamped, queue_size=0)
 
@@ -60,11 +62,11 @@ class Drive():
     def backward_until_obstacle(self):
         if self.is_simulator:
             self.backward()
-            time.sleep(1)
+            time.sleep(0.6)
             self.stop()
         else:
-            while not self.GPIO.input(LX_IR_SENSOR_PIN) == self.GPIO.LOW
-                    and not self.GPIO.input(RX_IR_SENSOR_PIN) == self.GPIO.LOW:
+            while (not self.GPIO.input(LX_IR_SENSOR_PIN) == self.GPIO.LOW
+                    and not self.GPIO.input(RX_IR_SENSOR_PIN) == self.GPIO.LOW):
                 self.backward()
 
 if __name__ == '__main__':
