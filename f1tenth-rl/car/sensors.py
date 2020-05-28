@@ -4,32 +4,33 @@ from nav_msgs.msg import Odometry
 import time
 import math
 import argparse
-
-try:
-    import Jetson.GPIO as GPIO
-except ImportError:
-    pass
-
-LX_IR_SENSOR_PIN = 1
-RX_IR_SENSOR_PIN = 0
+import subprocess
 
 class Sensors():
-    def __init__(self, is_simulator=False, add_lidar_callback=None):
-        self.add_lidar_callback = add_lidar_callback
+    def __init__(self, is_simulator=False):
+        self.custom_lidar_callback = None
         self.lidar_data = None
         self.odometry = None
+        if not is_simulator:
+            odom_topic = "/vesc/odom"
+        else:
+            odom_topic = "/odom"
         self.lidar_subscriber = rospy.Subscriber("scan", LaserScan, self.lidar_callback)
-        self.odom_subscriber = rospy.Subscriber("odom", Odometry, self.odometry_callback)
+        self.odom_subscriber = rospy.Subscriber(odom_topic, Odometry, self.odometry_callback)
 
         if not is_simulator:
-            GPIO.setmode(GPIO.BCM)
-            GPIO.setup(LX_IR_SENSOR_PIN, GPIO.IN)
-            GPIO.setup(RX_IR_SENSOR_PIN, GPIO.IN)
+            #Setup pin of Orbitty Carrier for NVIDIA Jetson TX2
+            #check out http://connecttech.com/resource-center/kdb342-using-gpio-connect-tech-jetson-tx1-carriers/
+            subprocess.run('echo 388 > /sys/class/gpio/export', shell=True)
+            subprocess.run('echo 298 > /sys/class/gpio/export', shell=True)
+
+    def add_lidar_callback(self, callback):
+        self.custom_lidar_callback = callback
 
     def lidar_callback(self, lidar_data):
         self.lidar_data = lidar_data
-        if self.add_lidar_callback:
-            self.add_lidar_callback(lidar_data)
+        if self.custom_lidar_callback:
+            self.custom_lidar_callback(lidar_data)
 
     def odometry_callback(self, odometry):
         self.odometry = odometry
@@ -45,8 +46,11 @@ class Sensors():
         return self.odometry.twist.twist.angular
 
     def back_obstacle(self):
-        return (self.GPIO.input(LX_IR_SENSOR_PIN) == self.GPIO.LOW
-                    or self.GPIO.input(RX_IR_SENSOR_PIN) == self.GPIO.LOW)
+        #Read pin of Orbitty Carrier for NVIDIA Jetson TX2
+        #check out http://connecttech.com/resource-center/kdb342-using-gpio-connect-tech-jetson-tx1-carriers/
+        lx_value = subprocess.run('cat /sys/class/gpio/gpio298/value', shell=True, stdout=subprocess.PIPE)
+        rx_value = subprocess.run('cat /sys/class/gpio/gpio388/value', shell=True, stdout=subprocess.PIPE)
+        return (lx_value.stdout == b"0\n" or rx_value.stdout == b"0\n")
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -57,9 +61,10 @@ if __name__ == '__main__':
     sensor = Sensors(args.simulator)
     time.sleep(1)
     while True:
+        print("######################################")
         print(sensor.lidar_data)
         print(sensor.odometry)
         print(sensor.get_car_linear_acelleration())
         if not args.simulator:
             print(sensor.back_obstacle())
-        time.sleep(0.2)
+        time.sleep(5)

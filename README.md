@@ -25,7 +25,7 @@ In our experiment, we want to test *DQN* training directly in the *real world* t
 
         Follow the four tutorials (Building the car, system configuration, installing firmware, driving the car) at https://f1tenth.org/build.html to build and setup the car
 
-        You need to add to the back of the car one or two IR sensors that are used to safely go backwards when an episode ends (because the hokuyo lidar covers only 270 degrees). Configure your pinout in the file *car/sensors.py*
+        You need to add to the back of the car one or two IR sensors that are used to safely go backwards when an episode ends (because the hokuyo lidar covers only 270 degrees). Configure your pinout in the file *car/sensors.py*. The Orbitty Carrier has its own method to use gpio (i.e. bash commands). Check the numbers associated to the pins [here](http://connecttech.com/resource-center/kdb342-using-gpio-connect-tech-jetson-tx1-carriers/) and [here](http://connecttech.com/pdf/CTIM-ASG003_Manual.pdf). If you use the developer kit board, you have to implement the methods using Jetson.GPIO. If you use another board, find out how to use gpio and implement the methods
 
     + Simulator
 
@@ -45,7 +45,7 @@ In our experiment, we want to test *DQN* training directly in the *real world* t
 
     `$ sudo apt-get install ros-melodic-ackermann-msgs`
 
-4) Install tensorflow 2.x
+4) Install tensorflow 2.1.x
 
     + If you are on a *PC* (i.e. simulator)
 
@@ -53,7 +53,7 @@ In our experiment, we want to test *DQN* training directly in the *real world* t
 
     + In the real car, you need to install tensorflow for Jetson with Cuda (installed via JetPack)
 
-        follow the [tutorial](https://docs.nvidia.com/deeplearning/frameworks/install-tf-jetson-platform/index.html) for your specific Jetson
+        follow the [tutorial](https://docs.nvidia.com/deeplearning/frameworks/install-tf-jetson-platform/index.html) for your specific Jetson (verify that it will install at least v2.1.x, otherwise execute the upgrade command)
 
 
 5) Clone this repo
