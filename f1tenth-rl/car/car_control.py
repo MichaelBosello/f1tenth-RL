@@ -62,7 +62,7 @@ class Drive():
     def backward_until_obstacle(self):
         if self.is_simulator:
             self.backward()
-            time.sleep(0.6)
+            time.sleep(1)
             self.stop()
         else:
             while (not self.GPIO.input(LX_IR_SENSOR_PIN) == self.GPIO.LOW

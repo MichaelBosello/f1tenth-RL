@@ -19,11 +19,11 @@ class CarEnv:
         self.control = Drive(is_simulator=args.simulator)
         self.safety_control = SafetyControl(is_simulator=args.simulator)
         self.sensors = Sensors()
-        time.sleep(3)
+        time.sleep(10)
         self.history_length = args.history_length
         self.skip_frame = args.skip_frame
 
-        self.action_set = [0, 1, 2, 3, 4, 5]
+        self.action_set = [0, 1, 2]
 
         self.game_number = 0
         self.step_number = 0
@@ -42,6 +42,7 @@ class CarEnv:
             self.state = self.state.state_by_adding_data(self._get_car_state())
             
             for k in range(0, self.skip_frame + 1):
+                time.sleep(0.01)
                 self.frame_number += 1
                 self.episode_frame_number +=1
 
