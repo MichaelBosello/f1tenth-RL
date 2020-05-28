@@ -5,12 +5,12 @@ import sys
 import numpy as np
 import os
 import random
-import replay
 import time
 import argparse
 import datetime
 import tensorflow as tf
 
+import replay
 import dqn
 from car_env import CarEnv
 from state import State
@@ -24,7 +24,7 @@ parser = argparse.ArgumentParser()
 # real car or simulator
 parser.add_argument("--simulator", action='store_true', help="to set the use of the simulator")
 # agent parameters
-parser.add_argument("--learning-rate", type=float, default=0.0004, help="learning rate (step size for optimization algo)")
+parser.add_argument("--learning-rate", type=float, default=0.00035, help="learning rate (step size for optimization algo)")
 parser.add_argument("--gamma", type=float, default=0.996, help="gamma [0, 1] is the discount factor. It determines the importance of future rewards. A factor of 0 will make the agent consider only immediate reward, a factor approaching 1 will make it strive for a long-term high reward")
 parser.add_argument("--epsilon", type=float, default=1, help="]0, 1]for epsilon greedy train")
 parser.add_argument("--epsilon-decay", type=float, default=0.99986, help="]0, 1] every step epsilon = epsilon * decay, in order to decrease constantly")
@@ -35,7 +35,7 @@ parser.add_argument("--reduce-lidar-data", type=int, default=3, help="lidar data
 
 parser.add_argument("--observation-steps", type=int, default=350, help="train only after this many steps (1 step = [history-length] frames)")
 parser.add_argument("--target-model-update-freq", type=int, default=300, help="how often (in steps) to update the target model")
-parser.add_argument("--model", help="tensorflow model checkpoint file to initialize from")
+parser.add_argument("--model", help="tensorflow model directory to initialize from (e.g. run/model)")
 parser.add_argument("--history-length", type=int, default=1, help="length of history used in the dqn. An action is performed [history-length] time")
 parser.add_argument("--skip-frame", type=int, default=2, help="Actions are repeated [skip-frame] times. Unlike history-length, it doesn't increase the network size")
 # train parameters
@@ -83,8 +83,9 @@ with summary_writer.as_default():
 State.setup(args)
 
 environment = CarEnv(args)
-dqn = dqn.DeepQNetwork(environment.get_num_actions(), environment.get_state_size(), base_output_dir, tensorboard_dir, args)
 replay_memory = replay.ReplayMemory(base_output_dir, args)
+dqn = dqn.DeepQNetwork(environment.get_num_actions(), environment.get_state_size(), replay_memory,
+                            base_output_dir, tensorboard_dir, args)
 
 train_epsilon = args.epsilon #don't want to reset epsilon between epoch
 start_time = datetime.datetime.now()

@@ -2,6 +2,7 @@ import bisect
 import math
 import random
 import os
+import pickle
 
 class Sample:
     
@@ -24,13 +25,18 @@ class Sample:
 class ReplayMemory:
     
     def __init__(self, base_output_dir, args):
-        self.save_buffer_dir = base_output_dir + "/buffer/"
-        os.makedirs(self.save_buffer_dir)
+        self.save_buffer_dir = base_output_dir + "/models/"
+        if not os.path.isdir(self.save_buffer_dir):
+            os.makedirs(self.save_buffer_dir)
+        self.file = "replay_buffer.dat"
         self.samples = []
         self.max_samples = args.replay_capacity
         self.prioritized_replay = args.prioritized_replay
         self.num_interesting_samples = 0
         self.batches_drawn = 0
+
+        if args.model is not None:
+            self.load(args.model + self.file)
 
     def num_samples(self):
         return len(self.samples)
@@ -50,6 +56,15 @@ class ReplayMemory:
             return self._draw_prioritized_batch(batch_size)
         else:
             return random.sample(self.samples, batch_size)
+
+    def save(self):
+        with open(self.save_buffer_dir + self.file, "wb") as f:
+            pickle.dump(self.samples, f)
+
+    def load(self, file):
+        with open(file, "rb") as f:
+            self.samples = pickle.load(f)
+
 
 
 

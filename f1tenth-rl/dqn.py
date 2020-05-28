@@ -8,10 +8,11 @@ import state
 from state import State
 
 class DeepQNetwork:
-    def __init__(self, num_actions, state_size, base_dir, tensorboard_dir, args):
+    def __init__(self, num_actions, state_size, replay_buffer, base_dir, tensorboard_dir, args):
         
         self.num_actions = num_actions
         self.state_size = state_size
+        self.replay_buffer = replay_buffer
         self.history_length = args.history_length
 
         self.learning_rate = args.learning_rate
@@ -74,7 +75,7 @@ class DeepQNetwork:
             kernel_initializer=tf.keras.initializers.TruncatedNormal(stddev=0.01),
             bias_initializer=tf.keras.initializers.Constant(0.1))(x)
         x = layers.GlobalMaxPool1D()(x)
-        x = layers.Dense(256, activation='linear',
+        x = layers.Dense(128, activation='linear',
             kernel_initializer=tf.keras.initializers.TruncatedNormal(stddev=0.01),
             bias_initializer=tf.keras.initializers.Constant(0.1))(x)
         predictions = layers.Dense(self.num_actions, activation='linear',
@@ -118,5 +119,6 @@ class DeepQNetwork:
 
         if step_number % self.save_model_freq == 0:
             self.target_net.save_weights(self.checkpoint_dir)
+            self.replay_buffer.save()
 
         return loss
