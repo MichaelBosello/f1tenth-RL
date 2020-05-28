@@ -11,8 +11,11 @@ class State:
     def setup(args):
         State.use_compression = args.compress_replay
         State.history_length = args.history_length
+        State.reduce_by = args.reduce_lidar_data
 
     def state_by_adding_data(self, data):
+
+        data = self.process_data(data)
         
         if State.use_compression:
             data = blosc.compress(data.tobytes(), typesize=1)
@@ -37,3 +40,8 @@ class State:
         else:
             state = self.data
         return np.transpose(state, axes=(1,0))
+
+    def process_data(self, data):
+        data = [sum(data[i:i + State.reduce_by])/State.reduce_by for i in range(0, len(data), State.reduce_by)]
+        return data
+

@@ -9,7 +9,7 @@ It is designed to running on [f1tenth cars](https://f1tenth.org/)
 
 *It can be used on both the real f1tenth car and on its simulator*
 
-The networks used are CNNs. The DQN implementation provides several techniques to improve performances like double DQN, replay buffer, state history, prioritized sampling. It has various parameters (see below) that one can modify to fit the specific environment
+The DQN implementation provides several techniques to improve performances like double DQN, replay buffer, state history, prioritized sampling. It has various parameters (see below) that one can modify to fit the specific environment
 
 Model saving, replay buffer serialization, and tensorboard logging are provided 
 
@@ -25,7 +25,7 @@ In our experiment, we want to test *DQN* training directly in the *real world* t
 
         Follow the four tutorials (Building the car, system configuration, installing firmware, driving the car) at https://f1tenth.org/build.html to build and setup the car
 
-        You need to add to the back of the car one or two IR sensors that are used to safely go backwards when an episode ends (because the hokuyo lidar covers only 270 degrees). Configure your pinout in the file *car/car_control.py*
+        You need to add to the back of the car one or two IR sensors that are used to safely go backwards when an episode ends (because the hokuyo lidar covers only 270 degrees). Configure your pinout in the file *car/sensors.py*
 
     + Simulator
 
@@ -109,7 +109,7 @@ Run the RL algorithm:
 You can change several parameters when you run the program as command-line arguments. Use *-h* to see the argument help. 
 You can check the list of arguments and change their default value in *rl_car_driver.py*
 
-You can change the model size and architecture by changing the function *__build_q_net* in *dqn.py*
+You can change the model size and architecture by changing the function *__build_q_net* in *dqn.py*. We provide two basic networks: a fully connected and a CNN
 
 You can change the behavior of the actions in *car_env.py*. You can change the actions available to the agent by updating the *action_set*
 
@@ -128,7 +128,7 @@ The package *car* provides the interfaces to the car sensors (*sensors.py*) and 
 *rl_car_driver.py* contains the training cycle.
 *dqn.py* includes the NN and the DQN algorithm.
 
-*state.py* creates states by stacking data to form a history. It also provides the compression to save RAM.
+*state.py* creates states by preprocesing data and stacking them to form a history. It also provides the compression to save RAM.
 
 *replay.py* manage the samples and the replay buffer.
 

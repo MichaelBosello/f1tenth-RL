@@ -27,15 +27,17 @@ parser.add_argument("--simulator", action='store_true', help="to set the use of 
 parser.add_argument("--learning-rate", type=float, default=0.0004, help="learning rate (step size for optimization algo)")
 parser.add_argument("--gamma", type=float, default=0.996, help="gamma [0, 1] is the discount factor. It determines the importance of future rewards. A factor of 0 will make the agent consider only immediate reward, a factor approaching 1 will make it strive for a long-term high reward")
 parser.add_argument("--epsilon", type=float, default=1, help="]0, 1]for epsilon greedy train")
-parser.add_argument("--epsilon-decay", type=float, default=0.99989, help="]0, 1] every step epsilon = epsilon * decay, in order to decrease constantly")
+parser.add_argument("--epsilon-decay", type=float, default=0.99986, help="]0, 1] every step epsilon = epsilon * decay, in order to decrease constantly")
 parser.add_argument("--epsilon-min", type=float, default=0.1, help="epsilon with decay doesn't fall below epsilon min")
 parser.add_argument("--batch-size", type=float, default=32, help="size of the batch used in gradient descent")
+
+parser.add_argument("--reduce-lidar-data", type=int, default=3, help="lidar data are grouped by averaging [reduce-lidar-data] elements")
 
 parser.add_argument("--observation-steps", type=int, default=350, help="train only after this many steps (1 step = [history-length] frames)")
 parser.add_argument("--target-model-update-freq", type=int, default=300, help="how often (in steps) to update the target model")
 parser.add_argument("--model", help="tensorflow model checkpoint file to initialize from")
 parser.add_argument("--history-length", type=int, default=1, help="length of history used in the dqn. An action is performed [history-length] time")
-parser.add_argument("--skip-frame", type=int, default=8, help="Actions are repeated [skip-frame] times. Unlike history-length, it doesn't increase the network size")
+parser.add_argument("--skip-frame", type=int, default=2, help="Actions are repeated [skip-frame] times. Unlike history-length, it doesn't increase the network size")
 # train parameters
 parser.add_argument("--train-epoch-steps", type=int, default=5000, help="how many steps (1 step = [history-length] frames) to run during a training epoch")
 parser.add_argument("--eval-epoch-steps", type=int, default=500, help="how many steps (1 step = [history-length] frames) to run during an eval epoch")
@@ -71,15 +73,18 @@ process.start()
 
 base_output_dir = 'run-out-' + time.strftime("%Y-%m-%d-%H-%M-%S")
 os.makedirs(base_output_dir)
-summary_writer = tf.summary.create_file_writer(base_output_dir)
+
+tensorboard_dir = base_output_dir + "/tensorboard/"
+os.makedirs(tensorboard_dir)
+summary_writer = tf.summary.create_file_writer(tensorboard_dir)
 with summary_writer.as_default():
     tf.summary.text('params', str(args), step=0)
 
 State.setup(args)
 
 environment = CarEnv(args)
-dqn = dqn.DeepQNetwork(environment.get_num_actions(), environment.get_state_size(), base_output_dir, args)
-replay_memory = replay.ReplayMemory(args)
+dqn = dqn.DeepQNetwork(environment.get_num_actions(), environment.get_state_size(), base_output_dir, tensorboard_dir, args)
+replay_memory = replay.ReplayMemory(base_output_dir, args)
 
 train_epsilon = args.epsilon #don't want to reset epsilon between epoch
 start_time = datetime.datetime.now()
@@ -158,8 +163,9 @@ def run_epoch(min_epoch_steps, eval_with_epsilon=None):
             if episode_losses:
                 episode_avg_loss = np.mean(episode_losses)
 
-            log = ('Episode %d ended with score: %d (%s elapsed). Avg score: %.2f Avg loss: %.5f' %
-                (environment.get_game_number(), environment.get_game_score(), str(episode_time), avg_rewards, episode_avg_loss))
+            log = ('Episode %d ended with score: %d (%s elapsed) (step: %d). Avg score: %.2f Avg loss: %.5f' %
+                (environment.get_game_number(), environment.get_game_score(), str(episode_time),
+                environment.get_step_number(), avg_rewards, episode_avg_loss))
             print(log)
             print("epsilon " + str(train_epsilon))
             with summary_writer.as_default():
@@ -175,8 +181,9 @@ def run_epoch(min_epoch_steps, eval_with_epsilon=None):
                 episode_eval_reward_list = episode_eval_reward_list[:-1]
             avg_rewards = np.mean(episode_eval_reward_list)
 
-            log = ('Eval %d ended with score: %d (%s elapsed). Avg score: %.2f' %
-                (environment.get_game_number(), environment.get_game_score(), str(episode_time), avg_rewards))
+            log = ('Eval %d ended with score: %d (%s elapsed) (step: %d). Avg score: %.2f' %
+                (environment.get_game_number(), environment.get_game_score(), str(episode_time),
+                environment.get_step_number(), avg_rewards))
             print(log)
             with summary_writer.as_default():
                 tf.summary.text('log', log, step=environment.get_game_number())
