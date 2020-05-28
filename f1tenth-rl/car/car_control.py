@@ -5,16 +5,13 @@ import time
 import argparse
 
 try:
-    import Jetson.GPIO as GPIO
+    from car.sensors import Sensors
 except ImportError:
-    pass
+    from sensors import Sensors
 
 MAX_SPEED_REDUCTION = 5
 STEERING_SPEED_REDUCTION = 5
 LIGHTLY_STEERING_REDUCTION = 2.4
-
-LX_IR_SENSOR_PIN = 1
-RX_IR_SENSOR_PIN = 0
 
 class Drive():
     def __init__(self, is_simulator=False):
@@ -23,14 +20,12 @@ class Drive():
         max_steering = 0.4189
         if not is_simulator:
             topic = "/vesc/high_level/ackermann_cmd_mux/input/nav_0"
-            GPIO.setmode(GPIO.BCM)
-            GPIO.setup(LX_IR_SENSOR_PIN, GPIO.IN)
-            GPIO.setup(RX_IR_SENSOR_PIN, GPIO.IN)
             max_steering = 0.34
         self.max_speed = rospy.get_param("max_speed", 5)
         self.max_steering = rospy.get_param("max_steering", max_steering)
-        print("max_speed: ", self.max_speed, ", max_steering: ", self.max_steering)
         self.drive_publisher = rospy.Publisher(topic, AckermannDriveStamped, queue_size=0)
+        self.sensors = Sensors(is_simulator)
+        print("max_speed: ", self.max_speed, ", max_steering: ", self.max_steering)
 
     def forward(self):
         self.send_drive_command(self.max_speed/MAX_SPEED_REDUCTION, 0)
@@ -65,8 +60,7 @@ class Drive():
             time.sleep(1)
             self.stop()
         else:
-            while (not self.GPIO.input(LX_IR_SENSOR_PIN) == self.GPIO.LOW
-                    and not self.GPIO.input(RX_IR_SENSOR_PIN) == self.GPIO.LOW):
+            while not self.sensors.back_obstacle():
                 self.backward()
 
 if __name__ == '__main__':

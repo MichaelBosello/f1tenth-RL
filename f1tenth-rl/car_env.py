@@ -18,7 +18,7 @@ class CarEnv:
         rospy.init_node('rl_driver')
         self.control = Drive(is_simulator=args.simulator)
         self.safety_control = SafetyControl(is_simulator=args.simulator)
-        self.sensors = Sensors()
+        self.sensors = Sensors(is_simulator=args.simulator)
         time.sleep(10)
         self.history_length = args.history_length
         self.skip_frame = args.skip_frame
@@ -54,28 +54,30 @@ class CarEnv:
                     self.is_terminal = True
                     return reward, self.state, self.is_terminal
 
-                reward = 0
+                #reward = 0
                 if action == 0:
                     self.control.forward()
-                    reward = 0.7
+                    #reward = 0.7
                 elif action == 1:
                     self.control.right()
-                    reward = 0.3
+                    #reward = 0.3
                 elif action == 2:
                     self.control.left()
-                    reward = 0.3
+                    #reward = 0.3
                 elif action == 3:
                     self.control.lightly_right()
-                    reward = 0.3
+                    #reward = 0.3
                 elif action == 4:
                     self.control.lightly_left()
-                    reward = 0.3
+                    #reward = 0.3
                 elif action == 5:
                     self.control.stop()
-                    reward = -0.01
+                    #reward = -0.01
                     self.car_stop_count += 1
                 else:
                     raise ValueError('`action` should be between 0 and ' + str(len(self.action_set)-1))
+
+            reward = self.sensors.get_car_linear_acelleration() * 0.55
 
             if action != 5:
                 self.car_stop_count = 0
@@ -108,13 +110,13 @@ class CarEnv:
 
 
     def get_state_size(self):
-        return len(self._get_car_state())
+        return len(self.state.get_data())
 
     def get_num_actions(self):
         return len(self.action_set)
 
     def get_state(self):
-        return self.state
+        return self.state.get_data()
     
     def get_game_number(self):
         return self.game_number
