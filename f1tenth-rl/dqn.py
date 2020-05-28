@@ -8,7 +8,7 @@ import state
 from state import State
 
 class DeepQNetwork:
-    def __init__(self, num_actions, state_size, base_dir, args):
+    def __init__(self, num_actions, state_size, base_dir, tensorboard_dir, args):
         
         self.num_actions = num_actions
         self.state_size = state_size
@@ -32,7 +32,7 @@ class DeepQNetwork:
         self.target_net.summary(print_fn=lambda x : model_as_string.append(x))
         "\n".join(model_as_string)
 
-        summary_writer = tf.summary.create_file_writer(base_dir)
+        summary_writer = tf.summary.create_file_writer(tensorboard_dir)
         with summary_writer.as_default():
             tf.summary.text('model', model_as_string, step=0)
             
@@ -43,14 +43,34 @@ class DeepQNetwork:
 
 
     def __build_q_net(self):
+        # select from __build_dense or build_cnn
+        return self.__build_cnn()
+
+    def __build_dense(self):
         inputs = tf.keras.Input(shape=(self.state_size, self.history_length))
-        x = layers.Conv1D(filters=16, kernel_size=16, activation='relu',
+        x = layers.Flatten()(inputs)
+        x = layers.Dense(200, activation='relu',
+            kernel_initializer=tf.keras.initializers.TruncatedNormal())(x)
+        x = layers.Dense(200, activation='relu',
+            kernel_initializer=tf.keras.initializers.TruncatedNormal())(x)
+        x = layers.Dense(100, activation='relu',
+            kernel_initializer=tf.keras.initializers.TruncatedNormal())(x)
+        predictions = layers.Dense(self.num_actions, activation='linear',
+            kernel_initializer=tf.keras.initializers.TruncatedNormal())(x)
+        model = tf.keras.Model(inputs=inputs, outputs=predictions)
+        model.compile(optimizer=tf.keras.optimizers.RMSprop(self.learning_rate, clipvalue=1, decay=.95, epsilon=.01))
+        model.summary()
+        return model
+
+    def __build_cnn(self):
+        inputs = tf.keras.Input(shape=(self.state_size, self.history_length))
+        x = layers.Conv1D(filters=16, kernel_size=8, strides=4, activation='relu',
             kernel_initializer=tf.keras.initializers.TruncatedNormal(stddev=0.01),
             bias_initializer=tf.keras.initializers.Constant(0.1))(inputs)
-        x = layers.Conv1D(filters=32, kernel_size=12, activation='relu',
+        x = layers.Conv1D(filters=32, kernel_size=4, strides=2, activation='relu',
             kernel_initializer=tf.keras.initializers.TruncatedNormal(stddev=0.01),
             bias_initializer=tf.keras.initializers.Constant(0.1))(x)
-        x = layers.Conv1D(filters=32, kernel_size=9, activation='relu',
+        x = layers.Conv1D(filters=32, kernel_size=3, activation='relu',
             kernel_initializer=tf.keras.initializers.TruncatedNormal(stddev=0.01),
             bias_initializer=tf.keras.initializers.Constant(0.1))(x)
         x = layers.GlobalMaxPool1D()(x)
@@ -64,7 +84,6 @@ class DeepQNetwork:
         model.compile(optimizer=tf.keras.optimizers.RMSprop(self.learning_rate, clipvalue=1, decay=.95, epsilon=.01))
         model.summary()
         return model
-
 
         
     def inference(self, state):

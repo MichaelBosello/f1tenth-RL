@@ -1,6 +1,7 @@
 import bisect
 import math
 import random
+import os
 
 class Sample:
     
@@ -22,7 +23,9 @@ class Sample:
 
 class ReplayMemory:
     
-    def __init__(self, args):
+    def __init__(self, base_output_dir, args):
+        self.save_buffer_dir = base_output_dir + "/buffer/"
+        os.makedirs(self.save_buffer_dir)
         self.samples = []
         self.max_samples = args.replay_capacity
         self.prioritized_replay = args.prioritized_replay
