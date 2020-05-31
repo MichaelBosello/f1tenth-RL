@@ -13,7 +13,7 @@ except ImportError:
     from sensors import Sensors
     from car_control import Drive
 
-TTC_THRESHOLD_SIM = 0.5
+TTC_THRESHOLD_SIM = 0.35
 TTC_THRESHOLD_REAL_CAR = 0.6
 
 class SafetyControl():
