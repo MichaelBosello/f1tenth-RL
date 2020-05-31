@@ -6,13 +6,19 @@ import argparse
 
 try:
     from car.sensors import Sensors
+    from geometry_msgs.msg import PoseStamped
 except ImportError:
     from sensors import Sensors
 
 MAX_SPEED_REDUCTION = 6
-STEERING_SPEED_REDUCTION = 6
+STEERING_SPEED_REDUCTION = 4
 BACKWARD_SPEED_REDUCTION = 15
 LIGHTLY_STEERING_REDUCTION = 2.4
+BACKWARD_SECONDS = 1.5
+
+MAX_SPEED_REDUCTION_SIM = 4
+STEERING_SPEED_REDUCTION_SIM = 4
+USE_RESET_INSTEAD_OF_BACKWARDS_SIM = False
 
 class Drive():
     def __init__(self, is_simulator=False):
@@ -20,9 +26,14 @@ class Drive():
         if not is_simulator:
             topic = "/vesc/high_level/ackermann_cmd_mux/input/nav_0"
             max_steering = 0.34
+            self.max_speed_reduction = MAX_SPEED_REDUCTION
+            self.steering_max_speed_reduction = STEERING_SPEED_REDUCTION
         else:
             topic = "/drive"
             max_steering = 0.4189
+            self.max_speed_reduction = MAX_SPEED_REDUCTION_SIM
+            self.steering_max_speed_reduction = STEERING_SPEED_REDUCTION_SIM
+            self.reset_publisher = rospy.Publisher("/pose", PoseStamped, queue_size=0)
         self.max_speed = rospy.get_param("max_speed", 5)
         self.max_steering = rospy.get_param("max_steering", max_steering)
         self.drive_publisher = rospy.Publisher(topic, AckermannDriveStamped, queue_size=0)
@@ -30,25 +41,25 @@ class Drive():
         print("max_speed: ", self.max_speed, ", max_steering: ", self.max_steering)
 
     def forward(self):
-        self.send_drive_command(self.max_speed/MAX_SPEED_REDUCTION, 0)
+        self.send_drive_command(self.max_speed/self.max_speed_reduction, 0)
     
     def backward(self):
-        self.send_drive_command(-self.max_speed/MAX_SPEED_REDUCTION, 0)
+        self.send_drive_command(-self.max_speed/self.max_speed_reduction, 0)
     
     def stop(self):
         self.send_drive_command(0, 0)
     
     def right(self):
-        self.send_drive_command(self.max_speed/STEERING_SPEED_REDUCTION, -self.max_steering)
+        self.send_drive_command(self.max_speed/self.steering_max_speed_reduction, -self.max_steering)
 
     def left(self):
-        self.send_drive_command(self.max_speed/STEERING_SPEED_REDUCTION, self.max_steering)
+        self.send_drive_command(self.max_speed/self.steering_max_speed_reduction, self.max_steering)
 
     def lightly_right(self):
-        self.send_drive_command(self.max_speed/STEERING_SPEED_REDUCTION, -self.max_steering/LIGHTLY_STEERING_REDUCTION)
+        self.send_drive_command(self.max_speed/self.steering_max_speed_reduction, -self.max_steering/LIGHTLY_STEERING_REDUCTION)
 
     def lightly_left(self):
-        self.send_drive_command(self.max_speed/STEERING_SPEED_REDUCTION, self.max_steering/LIGHTLY_STEERING_REDUCTION)
+        self.send_drive_command(self.max_speed/self.steering_max_speed_reduction, self.max_steering/LIGHTLY_STEERING_REDUCTION)
 
     def send_drive_command(self, speed, steering_angle):
         ack_msg = AckermannDriveStamped()
@@ -58,11 +69,15 @@ class Drive():
 
     def backward_until_obstacle(self):
         if self.is_simulator:
-            self.backward()
-            time.sleep(1)
-            self.stop()
+            if USE_RESET_INSTEAD_OF_BACKWARDS_SIM:
+                self.reset_publisher.publish(PoseStamped())
+            else:
+                self.send_drive_command(-self.max_speed, 0)
+                time.sleep(0.2)
+                self.stop()
         else:
-            while not self.sensors.back_obstacle():
+            start = time.time()
+            while not self.sensors.back_obstacle() and time.time() - start < BACKWARD_SECONDS:
                 self.send_drive_command(-self.max_speed/BACKWARD_SPEED_REDUCTION, 0)
 
 if __name__ == '__main__':
