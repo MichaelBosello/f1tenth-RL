@@ -24,20 +24,22 @@ parser = argparse.ArgumentParser()
 # real car or simulator
 parser.add_argument("--simulator", action='store_true', help="to set the use of the simulator")
 # agent parameters
-parser.add_argument("--learning-rate", type=float, default=0.00035, help="learning rate (step size for optimization algo)")
+parser.add_argument("--learning-rate", type=float, default=0.0004, help="learning rate of the NN")
 parser.add_argument("--gamma", type=float, default=0.996, help="gamma [0, 1] is the discount factor. It determines the importance of future rewards. A factor of 0 will make the agent consider only immediate reward, a factor approaching 1 will make it strive for a long-term high reward")
 parser.add_argument("--epsilon", type=float, default=1, help="]0, 1]for epsilon greedy train")
-parser.add_argument("--epsilon-decay", type=float, default=0.99986, help="]0, 1] every step epsilon = epsilon * decay, in order to decrease constantly")
+parser.add_argument("--epsilon-decay", type=float, default=0.99998, help="]0, 1] every step epsilon = epsilon * decay, in order to decrease constantly")
 parser.add_argument("--epsilon-min", type=float, default=0.1, help="epsilon with decay doesn't fall below epsilon min")
 parser.add_argument("--batch-size", type=float, default=32, help="size of the batch used in gradient descent")
 
-parser.add_argument("--reduce-lidar-data", type=int, default=3, help="lidar data are grouped by averaging [reduce-lidar-data] elements")
-
-parser.add_argument("--observation-steps", type=int, default=350, help="train only after this many steps (1 step = [history-length] frames)")
-parser.add_argument("--target-model-update-freq", type=int, default=300, help="how often (in steps) to update the target model")
+parser.add_argument("--observation-steps", type=int, default=400, help="train only after this many steps (1 step = [history-length] frames)")
+parser.add_argument("--target-model-update-freq", type=int, default=600, help="how often (in steps) to update the target model")
 parser.add_argument("--model", help="tensorflow model directory to initialize from (e.g. run/model)")
 parser.add_argument("--history-length", type=int, default=1, help="length of history used in the dqn. An action is performed [history-length] time")
-parser.add_argument("--skip-frame", type=int, default=2, help="Actions are repeated [skip-frame] times. Unlike history-length, it doesn't increase the network size")
+parser.add_argument("--repeat-action", type=int, default=0, help="Actions are repeated [repeat-action] times. Unlike history-length, it doesn't increase the network size")
+# lidar pre-processing
+parser.add_argument("--reduce-lidar-data", type=int, default=36, help="lidar data are grouped by taking the min of [reduce-lidar-data] elements")
+parser.add_argument("--cut-lidar-data", type=int, default=4, help="N element at begin and end of lidar data are cutted. Executed after the grouping")
+parser.add_argument("--max-distance-norm", type=float, default=10, help="divide lidar elems by [max-distance-norm] to normalize between [0, 1]")
 # train parameters
 parser.add_argument("--train-epoch-steps", type=int, default=5000, help="how many steps (1 step = [history-length] frames) to run during a training epoch")
 parser.add_argument("--eval-epoch-steps", type=int, default=500, help="how many steps (1 step = [history-length] frames) to run during an eval epoch")
@@ -87,6 +89,8 @@ replay_memory = replay.ReplayMemory(base_output_dir, args)
 dqn = dqn.DeepQNetwork(environment.get_num_actions(), environment.get_state_size(), replay_memory,
                             base_output_dir, tensorboard_dir, args)
 
+time.sleep(5)
+
 train_epsilon = args.epsilon #don't want to reset epsilon between epoch
 start_time = datetime.datetime.now()
 train_episodes = 0
@@ -131,21 +135,26 @@ def run_epoch(min_epoch_steps, eval_with_epsilon=None):
             else:
                 action = dqn.inference(state.get_data())
 
-            # Make the move
-            old_state = state
-            reward, state, is_terminal = environment.step(action)
-            
-            # Record experience in replay memory and train
-            if is_training and old_state is not None:
-                replay_memory.add_sample(replay.Sample(old_state, action, reward, state, is_terminal))
+            # repeat the action K times
+            # we can' t skip frames as in a game, but we can keep an action for a while without losing GPU time
+            for k in range(0, args.repeat_action + 1):
 
-                if environment.get_step_number() > args.observation_steps and environment.get_episode_step_number() % args.history_length == 0:
-                    batch = replay_memory.draw_batch(args.batch_size)
-                    loss = dqn.train(batch, environment.get_step_number())
-                    episode_losses.append(loss)
+                # Make the move
+                old_state = state
+                reward, state, is_terminal = environment.step(action)
+                
+                # Record experience in replay memory and train
+                if is_training and old_state is not None:
+                    replay_memory.add_sample(replay.Sample(old_state, action, reward, state, is_terminal))
 
-            if is_terminal:
-                state = None
+                    if environment.get_step_number() > args.observation_steps and environment.get_episode_step_number() % args.history_length == 0:
+                        batch = replay_memory.draw_batch(args.batch_size)
+                        loss = dqn.train(batch, environment.get_step_number())
+                        episode_losses.append(loss)
+
+                if is_terminal:
+                    state = None
+                    break
 
         #################################
         # logging
@@ -164,7 +173,7 @@ def run_epoch(min_epoch_steps, eval_with_epsilon=None):
             if episode_losses:
                 episode_avg_loss = np.mean(episode_losses)
 
-            log = ('Episode %d ended with score: %d (%s elapsed) (step: %d). Avg score: %.2f Avg loss: %.5f' %
+            log = ('Episode %d ended with score: %.2f (%s elapsed) (step: %d). Avg score: %.2f Avg loss: %.5f' %
                 (environment.get_game_number(), environment.get_game_score(), str(episode_time),
                 environment.get_step_number(), avg_rewards, episode_avg_loss))
             print(log)
@@ -182,7 +191,7 @@ def run_epoch(min_epoch_steps, eval_with_epsilon=None):
                 episode_eval_reward_list = episode_eval_reward_list[:-1]
             avg_rewards = np.mean(episode_eval_reward_list)
 
-            log = ('Eval %d ended with score: %d (%s elapsed) (step: %d). Avg score: %.2f' %
+            log = ('Eval %d ended with score: %.2f (%s elapsed) (step: %d). Avg score: %.2f' %
                 (environment.get_game_number(), environment.get_game_score(), str(episode_time),
                 environment.get_step_number(), avg_rewards))
             print(log)

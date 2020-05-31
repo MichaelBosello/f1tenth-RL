@@ -12,6 +12,8 @@ class State:
         State.use_compression = args.compress_replay
         State.history_length = args.history_length
         State.reduce_by = args.reduce_lidar_data
+        State.cut_by = args.cut_lidar_data
+        State.max_distance_norm = args.max_distance_norm
 
     def state_by_adding_data(self, data):
 
@@ -42,6 +44,8 @@ class State:
         return np.transpose(state, axes=(1,0))
 
     def process_data(self, data):
-        data = [sum(data[i:i + State.reduce_by])/State.reduce_by for i in range(0, len(data), State.reduce_by)]
+        data = [min(data[i:i + State.reduce_by]) for i in range(0, len(data), State.reduce_by)]
+        data = data[State.cut_by:-State.cut_by]
+        data = [ x / State.max_distance_norm for x in data]
         return data
 
