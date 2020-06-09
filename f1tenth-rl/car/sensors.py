@@ -1,6 +1,7 @@
 import rospy
 from sensor_msgs.msg import LaserScan
 from nav_msgs.msg import Odometry
+
 import time
 import math
 import argparse
@@ -47,15 +48,15 @@ class Sensors():
         return self.odometry.twist.twist.angular
 
     def back_obstacle(self):
-        if self.is_simulator:
-            back_lidar_ranges = self.lidar_data.ranges[:100] + self.lidar_data.ranges[-100:]
-            return min(back_lidar_ranges) < 0.8
-        else:
+        if not self.is_simulator:
             #Read pin of Orbitty Carrier for NVIDIA Jetson TX2
             #check out http://connecttech.com/resource-center/kdb342-using-gpio-connect-tech-jetson-tx1-carriers/
             lx_value = subprocess.run('cat /sys/class/gpio/gpio298/value', shell=True, stdout=subprocess.PIPE)
             rx_value = subprocess.run('cat /sys/class/gpio/gpio388/value', shell=True, stdout=subprocess.PIPE)
             return (lx_value.stdout == b"0\n" or rx_value.stdout == b"0\n")
+        else:
+            back_lidar_ranges = self.lidar_data.ranges[:100] + self.lidar_data.ranges[-100:]
+            return min(back_lidar_ranges) < 0.8
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
