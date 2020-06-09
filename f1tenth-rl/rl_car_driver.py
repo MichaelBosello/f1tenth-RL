@@ -15,6 +15,9 @@ import dqn
 from car_env import CarEnv
 from state import State
 
+# real car: reduce-lidar-data:36, cut-lidar-data: 4
+# simulator: reduce-lidar-data:30, cut-lidar-data: 8
+
 
 #################################
 # parameters
@@ -27,47 +30,39 @@ parser.add_argument("--simulator", action='store_true', help="to set the use of 
 parser.add_argument("--learning-rate", type=float, default=0.0004, help="learning rate of the NN")
 parser.add_argument("--gamma", type=float, default=0.996, help="gamma [0, 1] is the discount factor. It determines the importance of future rewards. A factor of 0 will make the agent consider only immediate reward, a factor approaching 1 will make it strive for a long-term high reward")
 parser.add_argument("--epsilon", type=float, default=1, help="]0, 1]for epsilon greedy train")
-parser.add_argument("--epsilon-decay", type=float, default=0.99998, help="]0, 1] every step epsilon = epsilon * decay, in order to decrease constantly")
+parser.add_argument("--epsilon-decay", type=float, default=0.99993, help="]0, 1] every step epsilon = epsilon * decay, in order to decrease constantly")
 parser.add_argument("--epsilon-min", type=float, default=0.1, help="epsilon with decay doesn't fall below epsilon min")
 parser.add_argument("--batch-size", type=float, default=32, help="size of the batch used in gradient descent")
 
 parser.add_argument("--observation-steps", type=int, default=400, help="train only after this many steps (1 step = [history-length] frames)")
-parser.add_argument("--target-model-update-freq", type=int, default=600, help="how often (in steps) to update the target model")
+parser.add_argument("--target-model-update-freq", type=int, default=500, help="how often (in steps) to update the target model")
 parser.add_argument("--model", help="tensorflow model directory to initialize from (e.g. run/model)")
 parser.add_argument("--history-length", type=int, default=1, help="length of history used in the dqn. An action is performed [history-length] time")
-parser.add_argument("--repeat-action", type=int, default=0, help="Actions are repeated [repeat-action] times. Unlike history-length, it doesn't increase the network size")
+parser.add_argument("--repeat-action", type=int, default=1, help="actions are repeated [repeat-action] times. Unlike history-length, it doesn't increase the network size")
 # lidar pre-processing
-parser.add_argument("--reduce-lidar-data", type=int, default=36, help="lidar data are grouped by taking the min of [reduce-lidar-data] elements")
-parser.add_argument("--cut-lidar-data", type=int, default=4, help="N element at begin and end of lidar data are cutted. Executed after the grouping")
-parser.add_argument("--max-distance-norm", type=float, default=10, help="divide lidar elems by [max-distance-norm] to normalize between [0, 1]")
+parser.add_argument("--reduce-lidar-data", type=int, default=30, help="lidar data are grouped by taking the min of [reduce-lidar-data] elements")
+parser.add_argument("--cut-lidar-data", type=int, default=8, help="N element at begin and end of lidar data are cutted. Executed after the grouping")
+parser.add_argument("--max-distance-norm", type=float, default=20, help="divide lidar elems by [max-distance-norm] to normalize between [0, 1]")
+parser.add_argument("--lidar-reduction-method", choices=['avg', 'max', 'min', 'sampling'], type=str.lower, default='sampling', help="method used to aggregate lidar data")
+parser.add_argument("--lidar-float-cut", type=int, default=2, help="how many decimals of lidar ranges to take. -1 for no cutting")
+
+parser.add_argument("--lidar-to-image", type=bool, default=False, help="if true, an image of borders is built from lidar ranges and it is used as state")
+parser.add_argument("--show-image", type=bool, default=False, help="show the agent view. [lidar-to-image] must be true to have effect")
+parser.add_argument("--image-width", type=int, default=84, help="the width of the image built from lidar data. Applicable if [lidar-to-image] is true")
+parser.add_argument("--image-height", type=int, default=84, help="the height of the image built from lidar data. Applicable if [lidar-to-image] is true")
+parser.add_argument("--image-zoom", type=int, default=2, help="zoom lidar image to increase border separation. It must be appropriate for the circuit max distance and image size otherwise out-of-bound exception will be casted")
 # train parameters
 parser.add_argument("--train-epoch-steps", type=int, default=5000, help="how many steps (1 step = [history-length] frames) to run during a training epoch")
-parser.add_argument("--eval-epoch-steps", type=int, default=500, help="how many steps (1 step = [history-length] frames) to run during an eval epoch")
+parser.add_argument("--eval-epoch-steps", type=int, default=1000, help="how many steps (1 step = [history-length] frames) to run during an eval epoch")
 parser.add_argument("--replay-capacity", type=int, default=100000, help="how many states to store for future training")
-parser.add_argument("--prioritized-replay", action='store_true', help="Prioritize interesting states when training (e.g. terminal or non zero rewards)")
+parser.add_argument("--prioritized-replay", action='store_true', help="prioritize interesting states when training (e.g. terminal or non zero rewards)")
 parser.add_argument("--compress-replay", action='store_true', help="if set replay memory will be compressed with blosc, allowing much larger replay capacity")
-parser.add_argument("--normalize-weights", action='store_true', help="if set weights/biases are normalized like torch, with std scaled by fan in to the node")
-parser.add_argument("--save-model-freq", type=int, default=2000, help="save the model once per X training sessions")
+parser.add_argument("--save-model-freq", type=int, default=3000, help="save the model once per X training sessions")
+parser.add_argument("--logging", type=bool, default=True, help="enable tensorboard logging")
 args = parser.parse_args()
 
 print('Arguments: ', (args))
 
-#################################
-# stop handler
-#################################
-
-stop = False
-
-def stop_handler():
-  global stop
-  while not stop:
-    user_input = input()
-    if user_input == 'q':
-      print("Stopping...")
-      stop = True
-
-process = Thread(target=stop_handler)
-process.start()
 
 #################################
 # setup
@@ -89,14 +84,32 @@ replay_memory = replay.ReplayMemory(base_output_dir, args)
 dqn = dqn.DeepQNetwork(environment.get_num_actions(), environment.get_state_size(), replay_memory,
                             base_output_dir, tensorboard_dir, args)
 
-time.sleep(5)
-
 train_epsilon = args.epsilon #don't want to reset epsilon between epoch
 start_time = datetime.datetime.now()
 train_episodes = 0
 eval_episodes = 0
 episode_train_reward_list = []
 episode_eval_reward_list = []
+
+#################################
+# stop handler
+#################################
+
+stop = False
+
+def stop_handler():
+  global stop
+  while not stop:
+    user_input = input()
+    if user_input == 'q':
+      print("Stopping...")
+      stop = True
+    if user_input == 'r':
+      print("Resetting simulator position...")
+      environment.control.reset_simulator()
+
+process = Thread(target=stop_handler)
+process.start()
 
 #################################
 # training cycle definition
@@ -147,10 +160,12 @@ def run_epoch(min_epoch_steps, eval_with_epsilon=None):
                 if is_training and old_state is not None:
                     replay_memory.add_sample(replay.Sample(old_state, action, reward, state, is_terminal))
 
-                    if environment.get_step_number() > args.observation_steps and environment.get_episode_step_number() % args.history_length == 0:
+                    if environment.get_step_number() > args.observation_steps:
                         batch = replay_memory.draw_batch(args.batch_size)
                         loss = dqn.train(batch, environment.get_step_number())
                         episode_losses.append(loss)
+                    else:
+                        time.sleep(0.08)
 
                 if is_terminal:
                     state = None
@@ -177,17 +192,17 @@ def run_epoch(min_epoch_steps, eval_with_epsilon=None):
                 (environment.get_game_number(), environment.get_game_score(), str(episode_time),
                 environment.get_step_number(), avg_rewards, episode_avg_loss))
             print(log)
-            print("epsilon " + str(train_epsilon))
-            with summary_writer.as_default():
-                tf.summary.text('log', log, step=environment.get_game_number())
-                tf.summary.scalar('train episode reward', environment.get_game_score(), step=train_episodes)
-                tf.summary.scalar('train avg reward(100)', avg_rewards, step=train_episodes)
-                tf.summary.scalar('average loss', episode_avg_loss, step=train_episodes)
-                tf.summary.flush()
+            print("   epsilon " + str(train_epsilon))
+            if args.logging:
+                with summary_writer.as_default():
+                    tf.summary.text('log', log, step=environment.get_game_number())
+                    tf.summary.scalar('train episode reward', environment.get_game_score(), step=train_episodes)
+                    tf.summary.scalar('train avg reward(100)', avg_rewards, step=train_episodes)
+                    tf.summary.scalar('average loss', episode_avg_loss, step=train_episodes)
         else:
             eval_episodes += 1
             episode_eval_reward_list.insert(0, environment.get_game_score())
-            if len(episode_eval_reward_list) > 100:
+            if len(episode_eval_reward_list) > 10:
                 episode_eval_reward_list = episode_eval_reward_list[:-1]
             avg_rewards = np.mean(episode_eval_reward_list)
 
@@ -195,18 +210,16 @@ def run_epoch(min_epoch_steps, eval_with_epsilon=None):
                 (environment.get_game_number(), environment.get_game_score(), str(episode_time),
                 environment.get_step_number(), avg_rewards))
             print(log)
-            with summary_writer.as_default():
-                tf.summary.text('log', log, step=environment.get_game_number())
-                tf.summary.scalar('eval episode reward', environment.get_game_score(), step=eval_episodes)
-                tf.summary.scalar('eval avg reward(100)', avg_rewards, step=eval_episodes)
-                tf.summary.flush()
-        
+            if args.logging:
+                with summary_writer.as_default():
+                    tf.summary.text('log', log, step=environment.get_game_number())
+                    tf.summary.scalar('eval episode reward', environment.get_game_score(), step=eval_episodes)
+                    tf.summary.scalar('eval avg reward(10)', avg_rewards, step=eval_episodes)
 
         epoch_total_score += environment.get_game_score()
         environment.reset_game()
 
-    
-    # return the average score
+
     if environment.get_game_number() - start_game_number == 0:
         return 0
     return epoch_total_score / (environment.get_game_number() - start_game_number)
