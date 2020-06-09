@@ -6,42 +6,56 @@ import math
 import argparse
 import time
 
-try:
-    from car.sensors import Sensors
-    from car.car_control import Drive
-except ImportError:
-    from sensors import Sensors
-    from car_control import Drive
+TTC_THRESHOLD_SIM = 0.37
+TTC_THRESHOLD_REAL_CAR = 0.7
 
-TTC_THRESHOLD_SIM = 0.35
-TTC_THRESHOLD_REAL_CAR = 0.6
+EUCLIDEAN_THRESHOLD_SIM = 0.45
+EUCLIDEAN_THRESHOLD_REAL_CAR = 0.28
+
+USE_TTC = False
 
 class SafetyControl():
-    def __init__(self, is_simulator=False):
+    def __init__(self, drive, sensors, is_simulator=False):
         self.emergency_brake = False
-        self.drive = Drive(is_simulator)
-        self.sensors = Sensors(is_simulator)
+        self.drive = drive
+        self.sensors = sensors
         self.sensors.add_lidar_callback(self.lidar_callback)
+        self.safety = True
         if not is_simulator:
             self.ttc_treshold = TTC_THRESHOLD_REAL_CAR
+            self.euclidean_treshold = EUCLIDEAN_THRESHOLD_REAL_CAR
         else:
             self.ttc_treshold = TTC_THRESHOLD_SIM
+            self.euclidean_treshold = EUCLIDEAN_THRESHOLD_SIM
+
     def lidar_callback(self, lidar_data):
-        acelleration = self.sensors.get_car_linear_acelleration()
-        if acelleration != 0:
-            for i in range(len(lidar_data.ranges)):
-                angle = lidar_data.angle_min + i * lidar_data.angle_increment
-                proj_velocity = acelleration * math.cos(angle)
-                if proj_velocity != 0:
-                    ttc = lidar_data.ranges[i] / proj_velocity
-                    if ttc < self.ttc_treshold and ttc >= 0:
-                        self.emergency_brake = True
-                        break
-        if self.emergency_brake:
-            self.drive.stop()
+        if self.safety:
+            if USE_TTC:
+                acelleration = self.sensors.get_car_linear_acelleration()
+                if acelleration > 0:
+                    for i in range(len(lidar_data.ranges)):
+                        angle = lidar_data.angle_min + i * lidar_data.angle_increment
+                        proj_velocity = acelleration * math.cos(angle)
+                        if proj_velocity != 0:
+                            ttc = lidar_data.ranges[i] / proj_velocity
+                            if ttc < self.ttc_treshold and ttc >= 0:
+                                self.emergency_brake = True
+                                break
+            
+            if min(lidar_data.ranges) < self.euclidean_treshold:
+                self.emergency_brake = True
+
+            if self.emergency_brake:
+                self.drive.stop()
 
     def unlock_brake(self):
         self.emergency_brake = False
+
+    def disable_safety(self):
+        self.safety = False
+
+    def enable_safety(self):
+        self.safety = True
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
