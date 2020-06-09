@@ -20,7 +20,15 @@ In our experiment, we want to test *DQN* training directly in the *real world* t
 
 1) Install [ROS Melodic (desktop-full)](http://wiki.ros.org/melodic/Installation/Ubuntu)
 
-2) Setup the car *or* the simulator:
+2) Install the dependencies
+
+    `$ sudo apt-get install python3-pip python3-yaml`
+
+    `$ sudo pip3 install rospkg catkin_pkg`
+
+    `$ sudo apt-get install ros-melodic-ackermann-msgs``
+
+3) Setup the car *or* the simulator:
     + Real 1/10 scale car
 
         Follow the four tutorials (Building the car, system configuration, installing firmware, driving the car) at https://f1tenth.org/build.html to build and setup the car
@@ -29,27 +37,29 @@ In our experiment, we want to test *DQN* training directly in the *real world* t
 
     + Simulator
 
+        `sudo apt-get install ros-melodic-map-server`
+
+        `sudo apt-get install ros-melodic-joy`
+
         `$​ ​mkdir simulator`
 
         `$​ ​cd simulator`
 
+        `$​ ​mkdir src`
+
+        `$​ ​cd src`
+
         `$ git clone https://github.com/f1tenth/f1tenth_labs.git`
 
+        `$​ ​cd ../`
+
         `$ catkin_make`
-
-3) Install the dependencies to run ROS with python3
-
-    `$ sudo apt-get install python3-pip python3-yaml`
-
-    `$ sudo pip3 install rospkg catkin_pkg`
-
-    `$ sudo apt-get install ros-melodic-ackermann-msgs`
 
 4) Install tensorflow 2.1.x
 
     + If you are on a *PC* (i.e. simulator)
 
-        `$ sudo pip3 install tensorflow`
+        `$ pip3 install tensorflow`
 
     + In the real car, you need to install tensorflow for Jetson with Cuda (installed via JetPack)
 
