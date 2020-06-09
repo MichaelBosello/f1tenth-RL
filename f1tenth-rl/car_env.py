@@ -13,20 +13,23 @@ from car.sensors import Sensors
 MAX_STOP = 3
 
 # you can set the reward according to the action performed or according to the linear velocity of the car
-USE_VELOCITY_AS_REWARD = True
+USE_VELOCITY_AS_REWARD = False
+ADD_LIDAR_DISTANCE_REWARD = False
+LIDAR_DISTANCE_WEIGHT = 1.3
 
 # 0.55 real car 1/6 speed --- 0.46 simulator 1/3 speed
 VELOCITY_NORMALIZATION = 0.46 # normalize the velocity between 0 and 1 (e.g. max velocity = 1.8 => 1.8*0.55 =~ 1)
-REWARD_SCALING = 0.1 # scale the velocity rewards between [0, REWARD_SCALING]. I.e. at max velocity the reward is REWARD_SCALING
+REWARD_SCALING = 0.06 # scale the velocity rewards between [0, REWARD_SCALING]. I.e. at max velocity the reward is REWARD_SCALING
 
 class CarEnv:
     
     def __init__(self, args):
+        self.is_simulator = args.simulator
         rospy.init_node('rl_driver')
-        self.control = Drive(is_simulator=args.simulator)
-        self.safety_control = SafetyControl(is_simulator=args.simulator)
         self.sensors = Sensors(is_simulator=args.simulator)
-        time.sleep(5)
+        self.control = Drive(self.sensors, is_simulator=args.simulator)
+        self.safety_control = SafetyControl(self.control, self.sensors, is_simulator=args.simulator)
+        time.sleep(4)
         self.history_length = args.history_length
 
         self.action_set = [0, 1, 2]
@@ -49,8 +52,15 @@ class CarEnv:
             self.episode_frame_number +=1
 
             if self.safety_control.emergency_brake:
-                self.safety_control.unlock_brake()
+                self.safety_control.disable_safety()
+                time.sleep(0.3)
                 self.control.backward_until_obstacle()
+                self.safety_control.enable_safety()
+                self.safety_control.unlock_brake()
+                # if you select right/left from stop state, the real car turn the servo without moving..
+                if not self.is_simulator:
+                    self.control.forward()
+                time.sleep(0.3)
 
                 reward = -1
                 self.is_terminal = True
@@ -60,29 +70,25 @@ class CarEnv:
             reward = 0
             if action == 0:
                 self.control.forward()
-                reward = 0.3
+                reward = 0.08
             elif action == 1:
                 self.control.right()
-                reward = 0.1
+                reward = 0.02
             elif action == 2:
                 self.control.left()
-                reward = 0.1
+                reward = 0.02
             elif action == 3:
                 self.control.lightly_right()
-                reward = 0.1
+                reward = 0.02
             elif action == 4:
                 self.control.lightly_left()
-                reward = 0.1
+                reward = 0.02
             elif action == 5:
                 self.control.stop()
-                reward = -0.01
+                reward = -0.001
                 self.car_stop_count += 1
             else:
                 raise ValueError('`action` should be between 0 and ' + str(len(self.action_set)-1))
-                
-
-            if USE_VELOCITY_AS_REWARD:
-                reward = self.sensors.get_car_linear_acelleration() * VELOCITY_NORMALIZATION * REWARD_SCALING
 
             if action != 5:
                 self.car_stop_count = 0
@@ -91,6 +97,12 @@ class CarEnv:
                 self.control.forward()
 
             self.state = self.state.state_by_adding_data(self._get_car_state())
+
+            if USE_VELOCITY_AS_REWARD:
+                reward = self.sensors.get_car_linear_acelleration() * VELOCITY_NORMALIZATION * REWARD_SCALING
+
+            if ADD_LIDAR_DISTANCE_REWARD:
+                reward += min(list(self.sensors.get_lidar_ranges()))[0] * LIDAR_DISTANCE_WEIGHT
 
         self.game_score += reward
         return reward, self.state, self.is_terminal
@@ -109,8 +121,6 @@ class CarEnv:
 
     def _get_car_state(self):
         current_data = list(self.sensors.get_lidar_ranges())
-        #current_data.append(self.sensors.get_car_linear_acelleration())
-        #current_data.append(self.sensors.get_car_angular_acelleration())
         return current_data
 
 
