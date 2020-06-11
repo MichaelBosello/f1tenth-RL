@@ -53,11 +53,11 @@ class State:
             state = self.data
 
         if State.history_length == 1:
-            return state[0]
+            return np.asarray(state[0])
         if State.lidar_to_image:
             return np.asarray(state).reshape((State.image_width, State.image_height, State.history_length))
         else:
-            return np.asarray(state)
+            return np.asarray(state).reshape((len(state[0]), State.history_length))
 
     def process_data(self, data):
         if State.lidar_to_image:

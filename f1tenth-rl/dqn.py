@@ -55,31 +55,24 @@ class DeepQNetwork:
 
     def __build_dense(self):
         inputs = tf.keras.Input(shape=(self.state_size, self.history_length))
-        x = layers.Flatten()(inputs)
+        x = layers.Dense(200, activation='relu')(inputs)
         x = layers.Dense(200, activation='relu')(x)
         x = layers.Dense(100, activation='relu')(x)
-        predictions = layers.Dense(self.num_actions, activation='tanh')(x)
+        x = layers.Flatten()(x)
+        predictions = layers.Dense(self.num_actions, activation='linear')(x)
         model = tf.keras.Model(inputs=inputs, outputs=predictions)
-        model.compile(optimizer=tf.keras.optimizers.Adam(self.learning_rate, clipvalue=1),
+        model.compile(optimizer=tf.keras.optimizers.RMSprop(self.learning_rate, clipvalue=1, decay=.95, epsilon=.01),
                             loss='mse') #loss to be removed. It is needed in the bugged version installed on Jetson
         model.summary()
         return model
 
     def __build_cnn1D(self):
         inputs = tf.keras.Input(shape=(self.state_size, self.history_length))
-        x = layers.Conv1D(filters=32, kernel_size=3, strides=1, activation='relu',
-            kernel_initializer=tf.keras.initializers.TruncatedNormal(stddev=0.01),
-            bias_initializer=tf.keras.initializers.Constant(0.1))(inputs)
-        x = layers.Conv1D(filters=16, kernel_size=3, strides=1, activation='relu',
-            kernel_initializer=tf.keras.initializers.TruncatedNormal(stddev=0.01),
-            bias_initializer=tf.keras.initializers.Constant(0.1))(x)
+        x = layers.Conv1D(filters=32, kernel_size=3, strides=1, activation='relu')(inputs)
+        x = layers.Conv1D(filters=16, kernel_size=3, strides=1, activation='relu')(x)
         x = layers.Flatten()(x)
-        x = layers.Dense(128, activation='relu',
-            kernel_initializer=tf.keras.initializers.TruncatedNormal(stddev=0.01),
-            bias_initializer=tf.keras.initializers.Constant(0.1))(x)
-        predictions = layers.Dense(self.num_actions, activation='linear',
-            kernel_initializer=tf.keras.initializers.TruncatedNormal(stddev=0.01),
-            bias_initializer=tf.keras.initializers.Constant(0.1))(x)
+        x = layers.Dense(128, activation='relu')(x)
+        predictions = layers.Dense(self.num_actions, activation='linear')(x)
         model = tf.keras.Model(inputs=inputs, outputs=predictions)
         model.compile(optimizer=tf.keras.optimizers.RMSprop(self.learning_rate, clipvalue=1, decay=.95, epsilon=.01),
                             loss='mse') #loss to be removed. It is needed in the bugged version installed on Jetson
@@ -89,23 +82,13 @@ class DeepQNetwork:
     def __build_cnn2D(self):
         inputs = tf.keras.Input(shape=(self.image_width, self.image_height, self.history_length))
         x = layers.Lambda(lambda layer: layer / 255)(inputs)
-        x = layers.Conv2D(filters=32, kernel_size=(8, 8), strides=(4, 4), activation='relu',
-            kernel_initializer=tf.keras.initializers.TruncatedNormal(stddev=0.01),
-            bias_initializer=tf.keras.initializers.Constant(0.1))(x)
-        x = layers.Conv2D(filters=64, kernel_size=(4, 4), strides=(2, 2), activation='relu',
-            kernel_initializer=tf.keras.initializers.TruncatedNormal(stddev=0.01),
-            bias_initializer=tf.keras.initializers.Constant(0.1))(x)
-        x = layers.Conv2D(filters=64, kernel_size=(3, 3), strides=(1, 1), activation='relu',
-            kernel_initializer=tf.keras.initializers.TruncatedNormal(stddev=0.01),
-            bias_initializer=tf.keras.initializers.Constant(0.1))(x)
-        x = layers.MaxPool2D((4,4))(x)
+        x = layers.Conv2D(filters=16, kernel_size=(8, 8), strides=(4, 4), activation='relu')(x)
+        x = layers.Conv2D(filters=32, kernel_size=(4, 4), strides=(2, 2), activation='relu')(x)
+        x = layers.Conv2D(filters=32, kernel_size=(3, 3), strides=(1, 1), activation='relu')(x)
+        x = layers.MaxPool2D((2,2))(x)
         x = layers.Flatten()(x)
-        x = layers.Dense(256, activation='relu',
-            kernel_initializer=tf.keras.initializers.TruncatedNormal(stddev=0.01),
-            bias_initializer=tf.keras.initializers.Constant(0.1))(x)
-        predictions = layers.Dense(self.num_actions, activation='linear',
-            kernel_initializer=tf.keras.initializers.TruncatedNormal(stddev=0.01),
-            bias_initializer=tf.keras.initializers.Constant(0.1))(x)
+        x = layers.Dense(128, activation='relu')(x)
+        predictions = layers.Dense(self.num_actions, activation='linear')(x)
         model = tf.keras.Model(inputs=inputs, outputs=predictions)
         model.compile(optimizer=tf.keras.optimizers.RMSprop(self.learning_rate, clipvalue=1, decay=.95, epsilon=.01),
                             loss='mse') #loss to be removed. It is needed in the bugged version installed on Jetson
@@ -115,9 +98,9 @@ class DeepQNetwork:
         
     def inference(self, state):
         if self.lidar_to_image:
-            state = np.asarray(state).reshape((-1, self.image_width, self.image_height, self.history_length))
+            state = state.reshape((-1, self.image_width, self.image_height, self.history_length))
         else:
-            state = np.asarray(state).reshape((-1, self.state_size, self.history_length))
+            state = state.reshape((-1, self.state_size, self.history_length))
         return self.behavior_net.predict(state).argmax(axis=1)
 
         
