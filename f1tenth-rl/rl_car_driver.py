@@ -28,36 +28,41 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--simulator", action='store_true', help="to set the use of the simulator")
 # agent parameters
 parser.add_argument("--learning-rate", type=float, default=0.0004, help="learning rate of the NN")
-parser.add_argument("--gamma", type=float, default=0.996, help="gamma [0, 1] is the discount factor. It determines the importance of future rewards. A factor of 0 will make the agent consider only immediate reward, a factor approaching 1 will make it strive for a long-term high reward")
+parser.add_argument("--gamma", type=float, default=0.995, help="""gamma [0, 1] is the discount factor. It determines the importance of future rewards.
+                                A factor of 0 will make the agent consider only immediate reward, a factor approaching 1 will make it strive for a long-term high reward""")
 parser.add_argument("--epsilon", type=float, default=1, help="]0, 1]for epsilon greedy train")
-parser.add_argument("--epsilon-decay", type=float, default=0.99993, help="]0, 1] every step epsilon = epsilon * decay, in order to decrease constantly")
+parser.add_argument("--epsilon-decay", type=float, default=0.999934, help="]0, 1] every step epsilon = epsilon * decay, in order to decrease constantly")
 parser.add_argument("--epsilon-min", type=float, default=0.1, help="epsilon with decay doesn't fall below epsilon min")
 parser.add_argument("--batch-size", type=float, default=32, help="size of the batch used in gradient descent")
 
-parser.add_argument("--observation-steps", type=int, default=400, help="train only after this many steps (1 step = [history-length] frames)")
-parser.add_argument("--target-model-update-freq", type=int, default=500, help="how often (in steps) to update the target model")
+parser.add_argument("--observation-steps", type=int, default=300, help="train only after this many steps (1 step = [history-length] frames)")
+parser.add_argument("--target-model-update-freq", type=int, default=400, help="how often (in steps) to update the target model")
 parser.add_argument("--model", help="tensorflow model directory to initialize from (e.g. run/model)")
-parser.add_argument("--history-length", type=int, default=1, help="length of history used in the dqn. An action is performed [history-length] time")
-parser.add_argument("--repeat-action", type=int, default=1, help="actions are repeated [repeat-action] times. Unlike history-length, it doesn't increase the network size")
+parser.add_argument("--history-length", type=int, default=2, help="(>=1) length of history used in the dqn. An action is performed [history-length] time")
+parser.add_argument("--repeat-action", type=int, default=0, help="(>=0) actions are repeated [repeat-action] times. Unlike history-length, it doesn't increase the network size")
+parser.add_argument("--gpu-time", type=int, default=0.08, help="""waiting time (seconds) between actions when agent is not training (observation steps/evaluation).
+                                It should be the amount of time used by your CPU/GPU to perform a training sweep. It is needed to have the same states and rewards as
+                                training takes time and the environment evolves indipendently""")
 # lidar pre-processing
 parser.add_argument("--reduce-lidar-data", type=int, default=30, help="lidar data are grouped by taking the min of [reduce-lidar-data] elements")
 parser.add_argument("--cut-lidar-data", type=int, default=8, help="N element at begin and end of lidar data are cutted. Executed after the grouping")
 parser.add_argument("--max-distance-norm", type=float, default=20, help="divide lidar elems by [max-distance-norm] to normalize between [0, 1]")
-parser.add_argument("--lidar-reduction-method", choices=['avg', 'max', 'min', 'sampling'], type=str.lower, default='sampling', help="method used to aggregate lidar data")
-parser.add_argument("--lidar-float-cut", type=int, default=2, help="how many decimals of lidar ranges to take. -1 for no cutting")
+parser.add_argument("--lidar-reduction-method", choices=['avg', 'max', 'min', 'sampling'], default='avg', type=str.lower, help="method used to aggregate lidar data")
+parser.add_argument("--lidar-float-cut", type=int, default=-1, help="how many decimals of lidar ranges to take. -1 for no cutting")
 
 parser.add_argument("--lidar-to-image", type=bool, default=False, help="if true, an image of borders is built from lidar ranges and it is used as state")
 parser.add_argument("--show-image", type=bool, default=False, help="show the agent view. [lidar-to-image] must be true to have effect")
 parser.add_argument("--image-width", type=int, default=84, help="the width of the image built from lidar data. Applicable if [lidar-to-image] is true")
 parser.add_argument("--image-height", type=int, default=84, help="the height of the image built from lidar data. Applicable if [lidar-to-image] is true")
-parser.add_argument("--image-zoom", type=int, default=2, help="zoom lidar image to increase border separation. It must be appropriate for the circuit max distance and image size otherwise out-of-bound exception will be casted")
+parser.add_argument("--image-zoom", type=int, default=2, help="""zoom lidar image to increase border separation.
+                                It must be appropriate for the circuit max distance and image size otherwise out-of-bound exception will be casted""")
 # train parameters
-parser.add_argument("--train-epoch-steps", type=int, default=5000, help="how many steps (1 step = [history-length] frames) to run during a training epoch")
-parser.add_argument("--eval-epoch-steps", type=int, default=1000, help="how many steps (1 step = [history-length] frames) to run during an eval epoch")
+parser.add_argument("--train-epoch-steps", type=int, default=3500, help="how many steps (1 step = [history-length] frames) to run during a training epoch")
+parser.add_argument("--eval-epoch-steps", type=int, default=500, help="how many steps (1 step = [history-length] frames) to run during an eval epoch")
 parser.add_argument("--replay-capacity", type=int, default=100000, help="how many states to store for future training")
 parser.add_argument("--prioritized-replay", action='store_true', help="prioritize interesting states when training (e.g. terminal or non zero rewards)")
 parser.add_argument("--compress-replay", action='store_true', help="if set replay memory will be compressed with blosc, allowing much larger replay capacity")
-parser.add_argument("--save-model-freq", type=int, default=3000, help="save the model once per X training sessions")
+parser.add_argument("--save-model-freq", type=int, default=2000, help="save the model once per X training sessions")
 parser.add_argument("--logging", type=bool, default=True, help="enable tensorboard logging")
 args = parser.parse_args()
 
@@ -81,8 +86,8 @@ State.setup(args)
 
 environment = CarEnv(args)
 replay_memory = replay.ReplayMemory(base_output_dir, args)
-dqn = dqn.DeepQNetwork(environment.get_num_actions(), environment.get_state_size(), replay_memory,
-                            base_output_dir, tensorboard_dir, args)
+dqn = dqn.DeepQNetwork(environment.get_num_actions(), environment.get_state_size(),
+                        replay_memory, base_output_dir, tensorboard_dir, args)
 
 train_epsilon = args.epsilon #don't want to reset epsilon between epoch
 start_time = datetime.datetime.now()
@@ -148,28 +153,36 @@ def run_epoch(min_epoch_steps, eval_with_epsilon=None):
             else:
                 action = dqn.inference(state.get_data())
 
-            # repeat the action K times
-            # we can' t skip frames as in a game, but we can keep an action for a while without losing GPU time
-            for k in range(0, args.repeat_action + 1):
-
+            # we can't skip frames as in a game
+            # we need to wait the evolution of the environment, but we don't want to waste GPU time
+            # we can use a training sweep (which requires some time) instead of using a sleep
+            old_state = state
+            for i in range(0, args.history_length * (args.repeat_action + 1)):
                 # Make the move
-                old_state = state
                 reward, state, is_terminal = environment.step(action)
-                
-                # Record experience in replay memory and train
-                if is_training and old_state is not None:
-                    replay_memory.add_sample(replay.Sample(old_state, action, reward, state, is_terminal))
 
+                # train
+                if is_training and old_state is not None:
                     if environment.get_step_number() > args.observation_steps:
                         batch = replay_memory.draw_batch(args.batch_size)
                         loss = dqn.train(batch, environment.get_step_number())
                         episode_losses.append(loss)
                     else:
-                        time.sleep(0.08)
-
+                        time.sleep(args.gpu_time)
+                else:
+                    time.sleep(args.gpu_time)
+                
                 if is_terminal:
-                    state = None
                     break
+
+            # Record experience in replay memory
+            if is_training and old_state is not None:
+                replay_memory.add_sample(replay.Sample(old_state, action, reward, state, is_terminal))
+
+            if is_terminal:
+                state = None
+
+
 
         #################################
         # logging
