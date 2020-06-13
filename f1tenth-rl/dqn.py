@@ -2,7 +2,7 @@ import math
 import numpy as np
 import os
 import tensorflow as tf
-from tensorflow.keras import layers
+from tensorflow.keras import layers, initializers, losses, optimizers
 
 import state
 from state import State
@@ -55,14 +55,13 @@ class DeepQNetwork:
 
     def __build_dense(self):
         inputs = tf.keras.Input(shape=(self.state_size, self.history_length))
-        x = layers.Dense(200, activation='relu')(inputs)
-        x = layers.Dense(200, activation='relu')(x)
-        x = layers.Dense(100, activation='relu')(x)
+        x = layers.Dense(128, activation='relu', kernel_initializer=initializers.VarianceScaling(scale=2.))(inputs)
+        x = layers.Dense(128, activation='relu', kernel_initializer=initializers.VarianceScaling(scale=2.))(x)
         x = layers.Flatten()(x)
-        predictions = layers.Dense(self.num_actions, activation='linear')(x)
+        predictions = layers.Dense(self.num_actions, activation='linear', kernel_initializer=initializers.VarianceScaling(scale=2.))(x)
         model = tf.keras.Model(inputs=inputs, outputs=predictions)
-        model.compile(optimizer=tf.keras.optimizers.RMSprop(self.learning_rate, clipvalue=1, decay=.95, epsilon=.01),
-                            loss='mse') #loss to be removed. It is needed in the bugged version installed on Jetson
+        model.compile(optimizer=optimizers.Adam(self.learning_rate),
+                            loss=losses.Huber()) #loss to be removed. It is needed in the bugged version installed on Jetson
         model.summary()
         return model
 
@@ -74,8 +73,8 @@ class DeepQNetwork:
         x = layers.Dense(128, activation='relu')(x)
         predictions = layers.Dense(self.num_actions, activation='linear')(x)
         model = tf.keras.Model(inputs=inputs, outputs=predictions)
-        model.compile(optimizer=tf.keras.optimizers.RMSprop(self.learning_rate, clipvalue=1, decay=.95, epsilon=.01),
-                            loss='mse') #loss to be removed. It is needed in the bugged version installed on Jetson
+        model.compile(optimizer=optimizers.RMSprop(self.learning_rate, clipvalue=1, decay=.95, epsilon=.01),
+                            loss=losses.Huber()) #loss to be removed. It is needed in the bugged version installed on Jetson
         model.summary()
         return model
 
@@ -90,8 +89,8 @@ class DeepQNetwork:
         x = layers.Dense(128, activation='relu')(x)
         predictions = layers.Dense(self.num_actions, activation='linear')(x)
         model = tf.keras.Model(inputs=inputs, outputs=predictions)
-        model.compile(optimizer=tf.keras.optimizers.RMSprop(self.learning_rate, clipvalue=1, decay=.95, epsilon=.01),
-                            loss='mse') #loss to be removed. It is needed in the bugged version installed on Jetson
+        model.compile(optimizer=optimizers.RMSprop(self.learning_rate, clipvalue=1, decay=.95, epsilon=.01),
+                            loss=losses.Huber()) #loss to be removed. It is needed in the bugged version installed on Jetson
         model.summary()
         return model
 
@@ -119,6 +118,8 @@ class DeepQNetwork:
             one_hot_actions = tf.one_hot(actions, self.num_actions)
             current_q = tf.reduce_sum(tf.multiply(q_values, one_hot_actions), axis=1)
             loss = tf.reduce_mean(tf.square(target_q - current_q))
+
+            loss = losses.Huber()(target_q, current_q)
 
         variables = self.target_net.trainable_variables
         gradients = tape.gradient(loss, variables)
