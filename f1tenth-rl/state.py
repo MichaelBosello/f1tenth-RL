@@ -73,8 +73,10 @@ class State:
             data = [min(data[i:i + State.reduce_by]) for i in range(0, len(data), State.reduce_by)]
 
         data = data[State.cut_by:-State.cut_by]
+        if State.max_distance_norm > 1:
+            data = [x / State.max_distance_norm for x in data]
         if State.lidar_float_cut > -1:
-            data = [ round(x / State.max_distance_norm, State.lidar_float_cut) for x in data]
+            data = [round(x, State.lidar_float_cut) for x in data]
         return data
 
     def lidar_to_img(self, data):
