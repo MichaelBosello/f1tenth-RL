@@ -73,7 +73,7 @@ class DeepQNetwork:
         x = layers.Dense(128, activation='relu')(x)
         predictions = layers.Dense(self.num_actions, activation='linear')(x)
         model = tf.keras.Model(inputs=inputs, outputs=predictions)
-        model.compile(optimizer=optimizers.RMSprop(self.learning_rate, clipvalue=1, decay=.95, epsilon=.01),
+        model.compile(optimizer=optimizers.Adam(self.learning_rate),
                             loss=losses.Huber()) #loss to be removed. It is needed in the bugged version installed on Jetson
         model.summary()
         return model
@@ -89,7 +89,7 @@ class DeepQNetwork:
         x = layers.Dense(128, activation='relu')(x)
         predictions = layers.Dense(self.num_actions, activation='linear')(x)
         model = tf.keras.Model(inputs=inputs, outputs=predictions)
-        model.compile(optimizer=optimizers.RMSprop(self.learning_rate, clipvalue=1, decay=.95, epsilon=.01),
+        model.compile(optimizer=optimizers.Adam(self.learning_rate),
                             loss=losses.Huber()) #loss to be removed. It is needed in the bugged version installed on Jetson
         model.summary()
         return model
