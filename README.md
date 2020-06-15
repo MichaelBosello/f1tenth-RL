@@ -39,9 +39,13 @@ In our experiment, we want to test *DQN* training directly in the *real world* t
 
         `sudo apt-get install ros-melodic-map-server ros-melodic-joy`
 
+        `$ mkdir -p simulator/src`
+
+        `$ cd simulator/src`
+
         `$ git clone https://github.com/f1tenth/f1tenth_simulator.git`
 
-        `$​ ​cd f1tenth_simulator`
+        `$ cd ../`
 
         `$ catkin_make`
 
@@ -83,7 +87,7 @@ Run the RL algorithm:
 
 ### Simulator
 Launch the f1tenth simulator:
-+ Go to the working directory of the simulator (*/f1tenth_simulator*)
++ Go to the working directory of the simulator (*/simulator*)
 
 `$ source devel/setup.bash`
 
@@ -96,14 +100,14 @@ Run the RL algorithm:
 `$ python3 rl_car_driver.py --simulator`
 
 #### Simulator options:
-+ The guide of the simulator is in the readme *f1tenth_simulator/README/md*
++ The guide of the simulator is in the readme *simulator/src/f1tenth_simulator/README/md*
 
-+ You may want to change the simulator options, check out *f1tenth_simulator/params.yaml*
++ You may want to change the simulator options, check out *simulator/src/f1tenth_simulator/params.yaml*
 
-+ If you want to change the circuit, you must edit *f1tenth_simulator/launch/simulator.launch*
++ If you want to change the circuit, you must edit *simulator/src/f1tenth_simulator/launch/simulator.launch*
 
     Search for `<arg name="map" default="$(find f1tenth_simulator)/maps/levine.yaml"/>`
-    Change *levine* (the default map) with one map present in the folder *f1tenth_simulator/maps*
+    Change *levine* (the default map) with one map present in the folder *simulator/src/f1tenth_simulator/maps*
 
 ## Experimenting with parameters
 You can change several parameters when you run the program as command-line arguments. Use *-h* to see the argument help. 
