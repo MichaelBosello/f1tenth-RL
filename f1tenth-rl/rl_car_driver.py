@@ -62,7 +62,7 @@ parser.add_argument("--eval-epoch-steps", type=int, default=500, help="how many 
 parser.add_argument("--replay-capacity", type=int, default=100000, help="how many states to store for future training")
 parser.add_argument("--prioritized-replay", action='store_true', help="prioritize interesting states when training (e.g. terminal or non zero rewards)")
 parser.add_argument("--compress-replay", action='store_true', help="if set replay memory will be compressed with blosc, allowing much larger replay capacity")
-parser.add_argument("--save-model-freq", type=int, default=2000, help="save the model once per X training sessions")
+parser.add_argument("--save-model-freq", type=int, default=120, help="save the model every X episodes")
 parser.add_argument("--logging", type=bool, default=True, help="enable tensorboard logging")
 args = parser.parse_args()
 
@@ -192,6 +192,9 @@ def run_epoch(min_epoch_steps, eval_with_epsilon=None):
                 environment.control.reset_simulator()
                 stuck_count = 0
 
+        if environment.get_game_number() % args.save_model_freq == 0:
+            dqn.save_network()
+
 
 
         #################################
@@ -225,7 +228,7 @@ def run_epoch(min_epoch_steps, eval_with_epsilon=None):
         else:
             eval_episodes += 1
             episode_eval_reward_list.insert(0, environment.get_game_score())
-            if len(episode_eval_reward_list) > 10:
+            if len(episode_eval_reward_list) > 100:
                 episode_eval_reward_list = episode_eval_reward_list[:-1]
             avg_rewards = np.mean(episode_eval_reward_list)
 
@@ -237,7 +240,7 @@ def run_epoch(min_epoch_steps, eval_with_epsilon=None):
                 with summary_writer.as_default():
                     tf.summary.text('log', log, step=environment.get_game_number())
                     tf.summary.scalar('eval episode reward', environment.get_game_score(), step=eval_episodes)
-                    tf.summary.scalar('eval avg reward(10)', avg_rewards, step=eval_episodes)
+                    tf.summary.scalar('eval avg reward(100)', avg_rewards, step=eval_episodes)
 
         epoch_total_score += environment.get_game_score()
         environment.reset_game()

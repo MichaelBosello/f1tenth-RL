@@ -20,7 +20,6 @@ class DeepQNetwork:
         self.target_model_update_freq = args.target_model_update_freq
 
         self.checkpoint_dir = base_dir + '/models/'
-        self.save_model_freq = args.save_model_freq
 
         self.lidar_to_image = args.lidar_to_image
         self.image_width = args.image_width
@@ -115,10 +114,8 @@ class DeepQNetwork:
 
         with tf.GradientTape() as tape:
             q_values = self.target_net(old_states)
-            one_hot_actions = tf.one_hot(actions, self.num_actions)
+            one_hot_actions = tf.keras.utils.to_categorical(actions, self.num_actions)# using tf.one_hot causes strange errors
             current_q = tf.reduce_sum(tf.multiply(q_values, one_hot_actions), axis=1)
-            loss = tf.reduce_mean(tf.square(target_q - current_q))
-
             loss = losses.Huber()(target_q, current_q)
 
         variables = self.target_net.trainable_variables
@@ -128,10 +125,10 @@ class DeepQNetwork:
         if step_number % self.target_model_update_freq == 0:
             self.behavior_net.set_weights(self.target_net.get_weights())
 
-        if step_number % self.save_model_freq == 0:
-            print("saving..")
-            self.target_net.save_weights(self.checkpoint_dir)
-            self.replay_buffer.save()
-            print("saved")
-
         return loss
+
+    def save_network(self):
+        print("saving..")
+        self.target_net.save_weights(self.checkpoint_dir)
+        self.replay_buffer.save()
+        print("saved")
