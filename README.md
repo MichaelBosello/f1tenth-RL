@@ -9,7 +9,7 @@ It is designed to running on [f1tenth cars](https://f1tenth.org/)
 
 *It can be used on both the real f1tenth car and on its simulator*
 
-The DQN implementation provides several techniques to improve performances like double DQN, replay buffer, state history, prioritized sampling. It has various parameters (see below) that one can modify to fit the specific environment
+The DQN implementation provides several techniques to improve performances like double DQN, replay buffer, state history, prioritized sampling. It has various parameters (see below) that one can modify to fit the specific environment. There are also various options to pre-process lidar data. One can use lidar data directly or represent them as images containing the environment borders
 
 Model saving, replay buffer serialization, and tensorboard logging are provided 
 
@@ -37,21 +37,11 @@ In our experiment, we want to test *DQN* training directly in the *real world* t
 
     + Simulator
 
-        `sudo apt-get install ros-melodic-map-server`
+        `sudo apt-get install ros-melodic-map-server ros-melodic-joy`
 
-        `sudo apt-get install ros-melodic-joy`
+        `$ git clone https://github.com/f1tenth/f1tenth_simulator.git`
 
-        `$​ ​mkdir simulator`
-
-        `$​ ​cd simulator`
-
-        `$​ ​mkdir src`
-
-        `$​ ​cd src`
-
-        `$ git clone https://github.com/f1tenth/f1tenth_labs.git`
-
-        `$​ ​cd ../`
+        `$​ ​cd f1tenth_simulator`
 
         `$ catkin_make`
 
@@ -93,11 +83,11 @@ Run the RL algorithm:
 
 ### Simulator
 Launch the f1tenth simulator:
-+ Go to the working directory of the simulator (*/simulator*)
++ Go to the working directory of the simulator (*/f1tenth_simulator*)
 
 `$ source devel/setup.bash`
 
-`$ roslaunch f110_simulator simulator.launch`
+`$ roslaunch f1tenth_simulator simulator.launch`
 
 Run the RL algorithm:
 
@@ -106,20 +96,20 @@ Run the RL algorithm:
 `$ python3 rl_car_driver.py --simulator`
 
 #### Simulator options:
-+ The guide of the simulator is in the readme *src/f1tenth_labs/f110_simulator/README/md*
++ The guide of the simulator is in the readme *f1tenth_simulator/README/md*
 
-+ You may want to change the simulator options, check out *src/f1tenth_labs/f110_simulator/params.yaml*
++ You may want to change the simulator options, check out *f1tenth_simulator/params.yaml*
 
-+ If you want to change the circuit, you must edit *src/f1tenth_labs/f110_simulator/launch/simulator.launch*
++ If you want to change the circuit, you must edit *f1tenth_simulator/launch/simulator.launch*
 
-    Search for `<arg name="map" default="$(find f110_simulator)/maps/levine.yaml"/>`
-    Change *levine* (the default map) with one map present in the folder *src/f1tenth_labs/f110_simulator/maps*
+    Search for `<arg name="map" default="$(find f1tenth_simulator)/maps/levine.yaml"/>`
+    Change *levine* (the default map) with one map present in the folder *f1tenth_simulator/maps*
 
 ## Experimenting with parameters
 You can change several parameters when you run the program as command-line arguments. Use *-h* to see the argument help. 
 You can check the list of arguments and change their default value in *rl_car_driver.py*
 
-You can change the model size and architecture by changing the function *__build_q_net* in *dqn.py*. We provide two basic networks: a fully connected and a CNN
+You can change the model size and architecture by changing the function *__build_q_net* in *dqn.py*. We provide some networks: a fully connected and a CNN1D. We give also the possibility to represent lidar data as images (black/white with env borders) and process them with a CNN2D
 
 You can change the behavior of the actions in *car_env.py*. You can change the actions available to the agent by updating the *action_set*
 
