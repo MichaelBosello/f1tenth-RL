@@ -1,9 +1,9 @@
 import numpy as np
 import math
 import time
-import cv2
 
 try:
+    import cv2
     import blosc
 except ImportError:
     pass
