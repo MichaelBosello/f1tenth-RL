@@ -24,11 +24,23 @@ In our experiment, we want to test *DQN* training directly in the *real world* t
 
     `$ sudo apt-get install python3-pip python3-yaml`
 
-    `$ sudo pip3 install rospkg catkin_pkg`
+    `$ pip3 install rospkg catkin_pkg`
 
-    `$ sudo apt-get install ros-melodic-ackermann-msgs``
+    `$ sudo apt-get install ros-melodic-ackermann-msgs`
 
-3) Setup the car *or* the simulator:
+3) __Optional__ dependencies
+
+    You need to install these packets *only if* you want to use the relative function
+
+    To visualize the images built from lidar data (lidar-to-image = True, show-image = True) you need opencv. *In the Jetson you must build the arm64 version*. In the simulator:
+
+    `$ pip3 install opencv-python`
+
+    To use compression of replay buffer (--compress-replay):
+
+    `$ pip3 install blosc`
+
+4) Setup the car *or* the simulator:
     + Real 1/10 scale car
 
         Follow the four tutorials (Building the car, system configuration, installing firmware, driving the car) at https://f1tenth.org/build.html to build and setup the car
@@ -49,7 +61,7 @@ In our experiment, we want to test *DQN* training directly in the *real world* t
 
         `$ catkin_make`
 
-4) Install tensorflow 2.1.x
+5) Install tensorflow 2.1.x
 
     + If you are on a *PC* (i.e. simulator)
 
@@ -60,7 +72,7 @@ In our experiment, we want to test *DQN* training directly in the *real world* t
         follow the [tutorial](https://docs.nvidia.com/deeplearning/frameworks/install-tf-jetson-platform/index.html) for your specific Jetson (verify that it will install at least v2.1.x, otherwise execute the upgrade command)
 
 
-5) Clone this repo
+6) Clone this repo
 
     `$ git clone https://github.com/MichaelBosello/f1tenth-RL.git`
 
