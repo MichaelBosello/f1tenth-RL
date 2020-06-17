@@ -50,7 +50,7 @@ class DeepQNetwork:
             return self.__build_cnn2D()
         else:
             # select from __build_dense or build_cnn1D
-            return self.__build_dense()
+            return self.__build_cnn1D()
 
     def __build_dense(self):
         inputs = tf.keras.Input(shape=(self.state_size, self.history_length))
@@ -66,10 +66,10 @@ class DeepQNetwork:
 
     def __build_cnn1D(self):
         inputs = tf.keras.Input(shape=(self.state_size, self.history_length))
-        x = layers.Conv1D(filters=32, kernel_size=3, strides=1, activation='relu', kernel_initializer=initializers.VarianceScaling(scale=2.))(inputs)
-        x = layers.Conv1D(filters=16, kernel_size=3, strides=1, activation='relu', kernel_initializer=initializers.VarianceScaling(scale=2.))(x)
+        x = layers.Conv1D(filters=16, kernel_size=4, strides=2, activation='relu', kernel_initializer=initializers.VarianceScaling(scale=2.))(inputs)
+        x = layers.Conv1D(filters=32, kernel_size=2, strides=1, activation='relu', kernel_initializer=initializers.VarianceScaling(scale=2.))(x)
         x = layers.Flatten()(x)
-        x = layers.Dense(128, activation='relu', kernel_initializer=initializers.VarianceScaling(scale=2.))(x)
+        x = layers.Dense(64, activation='relu', kernel_initializer=initializers.VarianceScaling(scale=2.))(x)
         predictions = layers.Dense(self.num_actions, activation='linear', kernel_initializer=initializers.VarianceScaling(scale=2.))(x)
         model = tf.keras.Model(inputs=inputs, outputs=predictions)
         model.compile(optimizer=optimizers.Adam(self.learning_rate),
@@ -85,7 +85,7 @@ class DeepQNetwork:
         x = layers.Conv2D(filters=32, kernel_size=(3, 3), strides=(1, 1), activation='relu', kernel_initializer=initializers.VarianceScaling(scale=2.))(x)
         x = layers.MaxPool2D((2,2))(x)
         x = layers.Flatten()(x)
-        x = layers.Dense(128, activation='relu', kernel_initializer=initializers.VarianceScaling(scale=2.))(x)
+        x = layers.Dense(64, activation='relu', kernel_initializer=initializers.VarianceScaling(scale=2.))(x)
         predictions = layers.Dense(self.num_actions, activation='linear', kernel_initializer=initializers.VarianceScaling(scale=2.))(x)
         model = tf.keras.Model(inputs=inputs, outputs=predictions)
         model.compile(optimizer=optimizers.Adam(self.learning_rate),
