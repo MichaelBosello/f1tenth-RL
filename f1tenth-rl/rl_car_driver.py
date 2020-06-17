@@ -40,7 +40,7 @@ parser.add_argument("--target-model-update-freq", type=int, default=500, help="h
 parser.add_argument("--model", help="tensorflow model directory to initialize from (e.g. run/model)")
 parser.add_argument("--history-length", type=int, default=2, help="(>=1) length of history used in the dqn. An action is performed [history-length] time")
 parser.add_argument("--repeat-action", type=int, default=0, help="(>=0) actions are repeated [repeat-action] times. Unlike history-length, it doesn't increase the network size")
-parser.add_argument("--gpu-time", type=int, default=0.08, help="""waiting time (seconds) between actions when agent is not training (observation steps/evaluation).
+parser.add_argument("--gpu-time", type=int, default=0.03, help="""waiting time (seconds) between actions when agent is not training (observation steps/evaluation).
                                 It should be the amount of time used by your CPU/GPU to perform a training sweep. It is needed to have the same states and rewards as
                                 training takes time and the environment evolves indipendently""")
 # lidar pre-processing
@@ -62,7 +62,7 @@ parser.add_argument("--eval-epoch-steps", type=int, default=500, help="how many 
 parser.add_argument("--replay-capacity", type=int, default=100000, help="how many states to store for future training")
 parser.add_argument("--prioritized-replay", action='store_true', help="prioritize interesting states when training (e.g. terminal or non zero rewards)")
 parser.add_argument("--compress-replay", action='store_true', help="if set replay memory will be compressed with blosc, allowing much larger replay capacity")
-parser.add_argument("--save-model-freq", type=int, default=120, help="save the model every X episodes")
+parser.add_argument("--save-model-freq", type=int, default=2000, help="save the model every X steps")
 parser.add_argument("--logging", type=bool, default=True, help="enable tensorboard logging")
 args = parser.parse_args()
 
@@ -137,6 +137,7 @@ def run_epoch(min_epoch_steps, eval_with_epsilon=None):
         state = None
         
         episode_losses = []
+        save_net = False
         while not environment.is_game_over() and not stop:
             # epsilon selection and update
             if is_training:
@@ -159,6 +160,10 @@ def run_epoch(min_epoch_steps, eval_with_epsilon=None):
             # we can use a training sweep (which requires some time) instead of using a sleep
             old_state = state
             for i in range(0, args.history_length * (args.repeat_action + 1)):
+
+                if environment.get_step_number() % args.save_model_freq == 0:
+                    save_net = True
+
                 # Make the move
                 reward, state, is_terminal = environment.step(action)
 
@@ -183,16 +188,17 @@ def run_epoch(min_epoch_steps, eval_with_epsilon=None):
             if is_terminal:
                 state = None
 
-            if reward == -1:
-                stuck_count = stuck_count + 1
-            else:
-                stuck_count = 0
-            if stuck_count > 2:
-                print("Car stuck, resetting simulator position...")
-                environment.control.reset_simulator()
-                stuck_count = 0
+            if args.simulator:
+                if reward == -1:
+                    stuck_count = stuck_count + 1
+                else:
+                    stuck_count = 0
+                if stuck_count > 2:
+                    print("Car stuck, resetting simulator position...")
+                    environment.control.reset_simulator()
+                    stuck_count = 0
 
-        if environment.get_game_number() % args.save_model_freq == 0:
+        if save_net:
             dqn.save_network()
 
 
