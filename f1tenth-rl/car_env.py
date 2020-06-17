@@ -63,7 +63,7 @@ class CarEnv:
                 self.safety_control.unlock_brake()
                 # if you select right/left from stop state, the real car turn the servo without moving..
                 self.control.forward()
-                time.sleep(0.6)
+                time.sleep(0.4)
 
             reward = -1
             self.is_terminal = True
