@@ -15,8 +15,8 @@ import dqn
 from car_env import CarEnv
 from state import State
 
-# real car: reduce-lidar-data:36, cut-lidar-data: 4
-# simulator: reduce-lidar-data:30, cut-lidar-data: 8
+# real car: reduce-lidar-data:36, cut-lidar-data: 4, distance-norm: 65 (100 in long circuits)
+# simulator: reduce-lidar-data:30, cut-lidar-data: 8, distance-norm: 20 (check the circuit, max 100)
 
 
 #################################
