@@ -7,12 +7,13 @@ import argparse
 import time
 
 TTC_THRESHOLD_SIM = 0.37
-TTC_THRESHOLD_REAL_CAR = 0.7
+TTC_THRESHOLD_REAL_CAR = 0.68
 
 EUCLIDEAN_THRESHOLD_SIM = 0.45
-EUCLIDEAN_THRESHOLD_REAL_CAR = 0.29
+EUCLIDEAN_THRESHOLD_REAL_CAR = 0.1
 
-USE_TTC = False
+USE_TTC_SIM = False
+USE_TTC_REAL_CAR = True
 
 class SafetyControl():
     def __init__(self, drive, sensors, is_simulator=False):
@@ -24,13 +25,15 @@ class SafetyControl():
         if not is_simulator:
             self.ttc_treshold = TTC_THRESHOLD_REAL_CAR
             self.euclidean_treshold = EUCLIDEAN_THRESHOLD_REAL_CAR
+            self.use_ttc = USE_TTC_REAL_CAR
         else:
             self.ttc_treshold = TTC_THRESHOLD_SIM
             self.euclidean_treshold = EUCLIDEAN_THRESHOLD_SIM
+            self.use_ttc = USE_TTC_SIM
 
     def lidar_callback(self, lidar_data):
         if self.safety:
-            if USE_TTC:
+            if self.use_ttc:
                 acelleration = self.sensors.get_car_linear_acelleration()
                 if acelleration > 0:
                     for i in range(len(lidar_data.ranges)):
