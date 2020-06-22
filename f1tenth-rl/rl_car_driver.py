@@ -18,6 +18,11 @@ from state import State
 # real car: reduce-lidar-data:36, cut-lidar-data: 4, distance-norm: 65 (100 in long circuits)
 # simulator: reduce-lidar-data:30, cut-lidar-data: 8, distance-norm: 20 (check the circuit, max 100)
 
+#real car: learning-rate:0.0004, epsilon-decay:0.9996, observation-steps:80, target-model-update-freq:100,
+#          train-epoch-steps:1500, eval-epoch-steps:200, save-model-freq:800
+#simulator: learning-rate:0.00038, epsilon-decay:0.999934, observation-steps:400, target-model-update-freq:500,
+#          train-epoch-steps:3500, eval-epoch-steps:500, save-model-freq:2000
+
 
 #################################
 # parameters
@@ -40,9 +45,10 @@ parser.add_argument("--target-model-update-freq", type=int, default=500, help="h
 parser.add_argument("--model", help="tensorflow model directory to initialize from (e.g. run/model)")
 parser.add_argument("--history-length", type=int, default=2, help="(>=1) length of history used in the dqn. An action is performed [history-length] time")
 parser.add_argument("--repeat-action", type=int, default=0, help="(>=0) actions are repeated [repeat-action] times. Unlike history-length, it doesn't increase the network size")
-parser.add_argument("--gpu-time", type=int, default=0.03, help="""waiting time (seconds) between actions when agent is not training (observation steps/evaluation).
+parser.add_argument("--gpu-time", type=int, default=0.026, help="""waiting time (seconds) between actions when agent is not training (observation steps/evaluation).
                                 It should be the amount of time used by your CPU/GPU to perform a training sweep. It is needed to have the same states and rewards as
                                 training takes time and the environment evolves indipendently""")
+parser.add_argument("--show-gpu-time", action='store_true', help="it prints the seconds used in one training step, useful to update the above param")
 # lidar pre-processing
 parser.add_argument("--reduce-lidar-data", type=int, default=30, help="lidar data are grouped by taking the min of [reduce-lidar-data] elements")
 parser.add_argument("--cut-lidar-data", type=int, default=8, help="N element at begin and end of lidar data are cutted. Executed after the grouping")
@@ -170,9 +176,13 @@ def run_epoch(min_epoch_steps, eval_with_epsilon=None):
                 # train
                 if is_training and old_state is not None:
                     if environment.get_step_number() > args.observation_steps:
+                        if args.show_gpu_time:
+                            start_time_train = datetime.datetime.now()
                         batch = replay_memory.draw_batch(args.batch_size)
                         loss = dqn.train(batch, environment.get_step_number())
                         episode_losses.append(loss)
+                        if args.show_gpu_time:
+                            print(datetime.datetime.now() - start_time_train)
                     else:
                         time.sleep(args.gpu_time)
                 else:
