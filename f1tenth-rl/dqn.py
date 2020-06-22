@@ -110,7 +110,7 @@ class DeepQNetwork:
         is_terminal = np.asarray([sample.terminal for sample in batch])
 
         q_new_state = np.max(self.target_net.predict(new_states), axis=1)
-        target_q = np.where(is_terminal, rewards, rewards+self.gamma*q_new_state)
+        target_q = rewards + (self.gamma*q_new_state * (1-is_terminal))
 
         with tf.GradientTape() as tape:
             q_values = self.target_net(old_states)
