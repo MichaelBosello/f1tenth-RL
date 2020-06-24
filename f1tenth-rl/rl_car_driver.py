@@ -182,7 +182,7 @@ def run_epoch(min_epoch_steps, eval_with_epsilon=None):
                         loss = dqn.train(batch, environment.get_step_number())
                         episode_losses.append(loss)
                         if args.show_gpu_time:
-                            print(datetime.datetime.now() - start_time_train)
+                            print("Training time: %fs" % (datetime.datetime.now() - start_time_train).total_seconds())
                     else:
                         time.sleep(args.gpu_time)
                 else:
