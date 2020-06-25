@@ -32,11 +32,11 @@ parser = argparse.ArgumentParser()
 # real car or simulator
 parser.add_argument("--simulator", action='store_true', help="to set the use of the simulator")
 # agent parameters
-parser.add_argument("--learning-rate", type=float, default=0.00038, help="learning rate of the NN")
+parser.add_argument("--learning-rate", type=float, default=0.00045, help="learning rate of the NN")
 parser.add_argument("--gamma", type=float, default=0.98, help="""gamma [0, 1] is the discount factor. It determines the importance of future rewards.
                                 A factor of 0 will make the agent consider only immediate reward, a factor approaching 1 will make it strive for a long-term high reward""")
 parser.add_argument("--epsilon", type=float, default=1, help="]0, 1]for epsilon greedy train")
-parser.add_argument("--epsilon-decay", type=float, default=0.999934, help="]0, 1] every step epsilon = epsilon * decay, in order to decrease constantly")
+parser.add_argument("--epsilon-decay", type=float, default=0.9999335, help="]0, 1] every step epsilon = epsilon * decay, in order to decrease constantly")
 parser.add_argument("--epsilon-min", type=float, default=0.1, help="epsilon with decay doesn't fall below epsilon min")
 parser.add_argument("--batch-size", type=float, default=32, help="size of the batch used in gradient descent")
 
