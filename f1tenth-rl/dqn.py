@@ -93,15 +93,15 @@ class DeepQNetwork:
         model.summary()
         return model
 
-        
+
     def inference(self, state):
         if self.lidar_to_image:
             state = state.reshape((-1, self.image_width, self.image_height, self.history_length))
         else:
             state = state.reshape((-1, self.state_size, self.history_length))
-        return self.behavior_net.predict(state).argmax(axis=1)
 
-        
+        return np.asarray(self.behavior_predict(state)).argmax(axis=1)
+
     def train(self, batch, step_number):
         old_states = np.asarray([sample.old_state.get_data() for sample in batch])
         new_states = np.asarray([sample.new_state.get_data() for sample in batch])
@@ -109,12 +109,29 @@ class DeepQNetwork:
         rewards = np.asarray([sample.reward for sample in batch])
         is_terminal = np.asarray([sample.terminal for sample in batch])
 
-        q_new_state = np.max(self.target_net.predict(new_states), axis=1)
+        q_new_state = np.max(self.target_predict(new_states), axis=1)
         target_q = rewards + (self.gamma*q_new_state * (1-is_terminal))
+        one_hot_actions = tf.keras.utils.to_categorical(actions, self.num_actions)# using tf.one_hot causes strange errors
 
+        loss = self.gradient_train(old_states, target_q, one_hot_actions)
+
+        if step_number % self.target_model_update_freq == 0:
+            self.behavior_net.set_weights(self.target_net.get_weights())
+
+        return loss
+
+    @tf.function
+    def target_predict(self, state):
+        return self.target_net(state)
+
+    @tf.function
+    def behavior_predict(self, state):
+        return self.behavior_net(state)
+
+    @tf.function
+    def gradient_train(self, old_states, target_q, one_hot_actions):
         with tf.GradientTape() as tape:
             q_values = self.target_net(old_states)
-            one_hot_actions = tf.keras.utils.to_categorical(actions, self.num_actions)# using tf.one_hot causes strange errors
             current_q = tf.reduce_sum(tf.multiply(q_values, one_hot_actions), axis=1)
             loss = losses.Huber()(target_q, current_q)
 
@@ -122,10 +139,8 @@ class DeepQNetwork:
         gradients = tape.gradient(loss, variables)
         self.target_net.optimizer.apply_gradients(zip(gradients, variables))
 
-        if step_number % self.target_model_update_freq == 0:
-            self.behavior_net.set_weights(self.target_net.get_weights())
-
         return loss
+
 
     def save_network(self):
         print("saving..")
