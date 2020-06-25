@@ -120,6 +120,7 @@ def stop_handler():
       environment.control.reset_simulator()
 
 process = Thread(target=stop_handler)
+process.daemon = True
 process.start()
 
 #################################
