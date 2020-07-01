@@ -138,6 +138,7 @@ def run_epoch(min_epoch_steps, eval_with_epsilon=None):
     start_game_number = environment.get_game_number()
     epoch_total_score = 0
     stuck_count = 0
+    time_list = []
 
     while environment.get_step_number() - step_start < min_epoch_steps and not stop:
         state_reward = 0
@@ -183,7 +184,9 @@ def run_epoch(min_epoch_steps, eval_with_epsilon=None):
                         loss = dqn.train(batch, environment.get_step_number())
                         episode_losses.append(loss)
                         if args.show_gpu_time:
-                            print("Training time: %fs" % (datetime.datetime.now() - start_time_train).total_seconds())
+                            training_time = (datetime.datetime.now() - start_time_train).total_seconds()
+                            time_list.append(training_time)
+                            print("Training time: %fs, Avg time:%fs" % (training_time, np.mean(time_list)))
                     else:
                         time.sleep(args.gpu_time)
                 else:
