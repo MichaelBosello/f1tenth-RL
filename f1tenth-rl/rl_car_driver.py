@@ -185,7 +185,9 @@ def run_epoch(min_epoch_steps, eval_with_epsilon=None):
                         episode_losses.append(loss)
                         if args.show_gpu_time:
                             training_time = (datetime.datetime.now() - start_time_train).total_seconds()
-                            time_list.append(training_time)
+                            time_list.insert(0, training_time)
+                            if len(time_list) > 100:
+                                time_list = time_list[:-1]
                             print("Training time: %fs, Avg time:%fs" % (training_time, np.mean(time_list)))
                     else:
                         time.sleep(args.gpu_time)
