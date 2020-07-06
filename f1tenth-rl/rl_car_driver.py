@@ -15,14 +15,9 @@ import dqn
 from car_env import CarEnv
 from state import State
 
-# real car: reduce-lidar-data:36, cut-lidar-data: 4, distance-norm: 65 (100 in long circuits)
+# real car: reduce-lidar-data:36, cut-lidar-data: 5, distance-norm: 66
 # simulator: reduce-lidar-data:30, cut-lidar-data: 8, distance-norm: 20 (check the circuit, max 100)
-
-#real car: learning-rate:0.0004, epsilon-decay:0.9996, observation-steps:80, target-model-update-freq:100,
-#          train-epoch-steps:1500, eval-epoch-steps:200, save-model-freq:800
-#simulator: learning-rate:0.00038, epsilon-decay:0.999934, observation-steps:400, target-model-update-freq:500,
-#          train-epoch-steps:3500, eval-epoch-steps:500, save-model-freq:2000
-
+# gpu-time tx2: 0.03, xavier agx: 0.015, i7 virtual machine: 0.0025
 
 #################################
 # parameters
@@ -32,11 +27,11 @@ parser = argparse.ArgumentParser()
 # real car or simulator
 parser.add_argument("--simulator", action='store_true', help="to set the use of the simulator")
 # agent parameters
-parser.add_argument("--learning-rate", type=float, default=0.00045, help="learning rate of the NN")
+parser.add_argument("--learning-rate", type=float, default=0.00042, help="learning rate of the NN")
 parser.add_argument("--gamma", type=float, default=0.98, help="""gamma [0, 1] is the discount factor. It determines the importance of future rewards.
                                 A factor of 0 will make the agent consider only immediate reward, a factor approaching 1 will make it strive for a long-term high reward""")
 parser.add_argument("--epsilon", type=float, default=1, help="]0, 1]for epsilon greedy train")
-parser.add_argument("--epsilon-decay", type=float, default=0.9999335, help="]0, 1] every step epsilon = epsilon * decay, in order to decrease constantly")
+parser.add_argument("--epsilon-decay", type=float, default=0.9999342, help="]0, 1] every step epsilon = epsilon * decay, in order to decrease constantly")
 parser.add_argument("--epsilon-min", type=float, default=0.1, help="epsilon with decay doesn't fall below epsilon min")
 parser.add_argument("--batch-size", type=float, default=32, help="size of the batch used in gradient descent")
 
@@ -44,8 +39,8 @@ parser.add_argument("--observation-steps", type=int, default=400, help="train on
 parser.add_argument("--target-model-update-freq", type=int, default=500, help="how often (in steps) to update the target model")
 parser.add_argument("--model", help="tensorflow model directory to initialize from (e.g. run/model)")
 parser.add_argument("--history-length", type=int, default=2, help="(>=1) length of history used in the dqn. An action is performed [history-length] time")
-parser.add_argument("--repeat-action", type=int, default=0, help="(>=0) actions are repeated [repeat-action] times. Unlike history-length, it doesn't increase the network size")
-parser.add_argument("--gpu-time", type=int, default=0.026, help="""waiting time (seconds) between actions when agent is not training (observation steps/evaluation).
+parser.add_argument("--repeat-action", type=int, default=2, help="(>=0) actions are repeated [repeat-action] times. Unlike history-length, it doesn't increase the network size")
+parser.add_argument("--gpu-time", type=int, default=0.015, help="""waiting time (seconds) between actions when agent is not training (observation steps/evaluation).
                                 It should be the amount of time used by your CPU/GPU to perform a training sweep. It is needed to have the same states and rewards as
                                 training takes time and the environment evolves indipendently""")
 parser.add_argument("--show-gpu-time", action='store_true', help="it prints the seconds used in one training step, useful to update the above param")
@@ -243,7 +238,6 @@ def run_epoch(min_epoch_steps, eval_with_epsilon=None):
             print("   epsilon " + str(train_epsilon))
             if args.logging:
                 with summary_writer.as_default():
-                    tf.summary.text('log', log, step=environment.get_game_number())
                     tf.summary.scalar('train episode reward', environment.get_game_score(), step=train_episodes)
                     tf.summary.scalar('train avg reward(100)', avg_rewards, step=train_episodes)
                     tf.summary.scalar('average loss', episode_avg_loss, step=train_episodes)
@@ -260,7 +254,6 @@ def run_epoch(min_epoch_steps, eval_with_epsilon=None):
             print(log)
             if args.logging:
                 with summary_writer.as_default():
-                    tf.summary.text('log', log, step=environment.get_game_number())
                     tf.summary.scalar('eval episode reward', environment.get_game_score(), step=eval_episodes)
                     tf.summary.scalar('eval avg reward(100)', avg_rewards, step=eval_episodes)
 
