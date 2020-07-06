@@ -38,7 +38,10 @@ class Sensors():
         self.odometry = odometry
 
     def get_lidar_ranges(self):
-        return self.lidar_data.ranges
+        if not self.is_simulator:
+            return self.lidar_data.ranges[:-1]
+        else:
+            return self.lidar_data.ranges
 
     def get_car_linear_acelleration(self):
         if self.odometry is None or (self.odometry.twist.twist.linear.x == 0 and self.odometry.twist.twist.linear.x == 0):
