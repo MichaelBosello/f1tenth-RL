@@ -56,9 +56,9 @@ class CarEnv:
                 time.sleep(0.3)
             else:
                 self.safety_control.disable_safety()
-                time.sleep(0.8)
+                time.sleep(0.5)
                 self.control.backward_until_obstacle()
-                time.sleep(0.8)
+                time.sleep(0.5)
                 self.safety_control.enable_safety()
                 self.safety_control.unlock_brake()
                 # if you select right/left from stop state, the real car turn the servo without moving..
