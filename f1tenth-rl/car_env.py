@@ -47,13 +47,20 @@ class CarEnv:
         self.episode_step_number += 1
 
         if self.safety_control.emergency_brake:
-            self.safety_control.disable_safety()
-            time.sleep(0.3)
-            self.control.backward_until_obstacle()
-            time.sleep(0.3)
-            self.safety_control.enable_safety()
-            self.safety_control.unlock_brake()
-            if not self.is_simulator:
+            if self.is_simulator:
+                self.safety_control.disable_safety()
+                time.sleep(0.3)
+                self.control.backward_until_obstacle()
+                self.safety_control.enable_safety()
+                self.safety_control.unlock_brake()
+                time.sleep(0.3)
+            else:
+                self.safety_control.disable_safety()
+                time.sleep(0.8)
+                self.control.backward_until_obstacle()
+                time.sleep(0.8)
+                self.safety_control.enable_safety()
+                self.safety_control.unlock_brake()
                 # if you select right/left from stop state, the real car turn the servo without moving..
                 self.control.forward()
                 time.sleep(0.4)
