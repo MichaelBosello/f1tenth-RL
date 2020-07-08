@@ -52,8 +52,6 @@ class State:
         else:
             state = self.data
 
-        if State.history_length == 1:
-            return np.asarray(state[0])
         if State.lidar_to_image:
             return np.asarray(state).reshape((State.image_width, State.image_height, State.history_length))
         else:
