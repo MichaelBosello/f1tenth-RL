@@ -11,7 +11,7 @@ try:
 except ImportError:
     from sensors import Sensors
 
-PUBLISHER_WAIT = 0.01
+PUBLISHER_WAIT = 0.005
 
 MAX_SPEED_REDUCTION = 8
 STEERING_SPEED_REDUCTION = 8
