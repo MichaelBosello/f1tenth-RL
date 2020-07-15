@@ -102,9 +102,11 @@ episode_eval_reward_list = []
 #################################
 
 stop = False
+pause = False
 
 def stop_handler():
   global stop
+  global pause
   while not stop:
     user_input = input()
     if user_input == 'q':
@@ -113,6 +115,12 @@ def stop_handler():
     if user_input == 'r':
       print("Resetting simulator position...")
       environment.control.reset_simulator()
+    if user_input == 'pause':
+      print("pause...")
+      pause = True
+    if user_input == 'resume':
+      print("...resume")
+      pause = False
 
 process = Thread(target=stop_handler)
 process.daemon = True
@@ -261,6 +269,9 @@ def run_epoch(min_epoch_steps, eval_with_epsilon=None):
 
         epoch_total_score += environment.get_game_score()
         environment.reset_game()
+
+        while pause and not stop:
+            time.sleep(1)
 
 
     if environment.get_game_number() - start_game_number == 0:
