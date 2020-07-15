@@ -242,6 +242,7 @@ def run_epoch(min_epoch_steps, eval_with_epsilon=None):
                     tf.summary.scalar('train avg reward(100)', avg_rewards, step=train_episodes)
                     tf.summary.scalar('average loss', episode_avg_loss, step=train_episodes)
                     tf.summary.scalar('epsilon', train_epsilon, step=train_episodes)
+                    tf.summary.scalar('steps', environment.get_step_number(), step=train_episodes)
         else:
             eval_episodes += 1
             episode_eval_reward_list.insert(0, environment.get_game_score())
