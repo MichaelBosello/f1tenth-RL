@@ -79,6 +79,12 @@ In our experiment, we want to test *DQN* training directly in the *real world* t
 
 ## Run
 
+### Configurations
+
+The parameters of the repo are configured for the simulator on a Nvidia Xavier AGX.
+
+Check out the configurations for the **real car** and other envs at [EXPERIMENT_SETTING.md](EXPERIMENT_SETTING.md)
+
 ### Real car
 
 > To let the control to the algorithm: 
