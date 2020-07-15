@@ -14,7 +14,13 @@ The DQN implementation provides several techniques to improve performances like 
 Model saving, replay buffer serialization, and tensorboard logging are provided 
 
 ## Introduction
-In our experiment, we want to test *DQN* training directly in the *real world* through realistic 1/10 scale car prototypes capable of performing training in real-time. This allows us to explore the use of RL for autonomous driving in the physical world in a cheap and safe way. In this setting, the driver agent faces all the problems of a not simulated environment, including sensors noise and actuators’ unpredictability. We start with the implementation of DQN on the car, and then we try various alterations to improve performance like reward function engineering and hyper-parameters tuning. In the end, the agent successfully learned a control policy, based on lidar data, to drive in two circuits.
+In our experiment, we want to test *DQN* training directly in the *real world* through realistic 1/10 scale car prototypes capable of performing training in real-time. This allows us to explore the use of RL for autonomous driving in the physical world in a cheap and safe way. In this setting, the driver agent faces all the problems of a not simulated environment, including sensors noise and actuators’ unpredictability. We start with the implementation of DQN on the car, and then we try various alterations to improve performance like reward function engineering and hyper-parameters tuning.
+
+## Experiments
+In the end, the agent successfully learned a control policy, based on lidar data, to drive in a circuit.
+Tensorboard logging and trained models of experiments are provided in the release section.
+
+![Evaluation run](img/run.gif)
 
 ## Installation
 
@@ -141,7 +147,7 @@ Keep in mind that to use a trained model, you must have the same network size, t
 For safety reasons, the car doesn't run at max speed. If you want the car to go faster, modify the constants in *car/car_control.py*
 
 ## Trained models
-We will provide pre-trained models in the release section
+We provide pre-trained models in the release section
 
 ## Source code structure
 The package *car* provides the interfaces to the car sensors (*sensors.py*) and actuators (*car_control.py*). It contains also a module that ensure the car will not (strongly) hit obstacles (*safety_control.py*)
