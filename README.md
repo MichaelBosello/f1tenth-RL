@@ -20,6 +20,8 @@ In our experiment, we want to test *DQN* training directly in the *real world* t
 In the end, the agent successfully learned a control policy, based on lidar data, to drive in a circuit.
 Tensorboard logging and trained models of experiments are provided in the release section.
 
+A video showing the evolution of training and the evaluation is available [here](https://youtu.be/ardg7-7Pevw)
+
 ![Evaluation run](img/run.gif)
 
 ## Installation
@@ -87,7 +89,7 @@ Tensorboard logging and trained models of experiments are provided in the releas
 
 ### Configurations
 
-The parameters of the repo are configured for the simulator on a Nvidia Xavier AGX.
+The parameters of the repo are configured for the simulator running on a PC with i7 processor (GPU is not used for Deep RL).
 
 Check out the configurations for the **real car** and other envs at [EXPERIMENT_SETTING.md](EXPERIMENT_SETTING.md)
 

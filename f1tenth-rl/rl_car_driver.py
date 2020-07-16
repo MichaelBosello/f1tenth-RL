@@ -36,9 +36,10 @@ parser.add_argument("--target-model-update-freq", type=int, default=500, help="h
 parser.add_argument("--model", help="tensorflow model directory to initialize from (e.g. run/model)")
 parser.add_argument("--history-length", type=int, default=2, help="(>=1) length of history used in the dqn. An action is performed [history-length] time")
 parser.add_argument("--repeat-action", type=int, default=2, help="(>=0) actions are repeated [repeat-action] times. Unlike history-length, it doesn't increase the network size")
-parser.add_argument("--gpu-time", type=int, default=0.015, help="""waiting time (seconds) between actions when agent is not training (observation steps/evaluation).
+parser.add_argument("--gpu-time", type=int, default=0.014, help="""waiting time (seconds) between actions when agent is not training (observation steps/evaluation).
                                 It should be the amount of time used by your CPU/GPU to perform a training sweep. It is needed to have the same states and rewards as
                                 training takes time and the environment evolves indipendently""")
+parser.add_argument("--slowdown-cycle", type=bool, default=True, help="add a sleep equal to [gpu-time] in the training cycle")
 parser.add_argument("--show-gpu-time", action='store_true', help="it prints the seconds used in one training step, useful to update the above param")
 # lidar pre-processing
 parser.add_argument("--reduce-lidar-data", type=int, default=30, help="lidar data are grouped by taking the min of [reduce-lidar-data] elements")
@@ -188,6 +189,8 @@ def run_epoch(min_epoch_steps, eval_with_epsilon=None):
                             if len(time_list) > 100:
                                 time_list = time_list[:-1]
                             print("Training time: %fs, Avg time:%fs" % (training_time, np.mean(time_list)))
+                        if args.slowdown_cycle:
+                            time.sleep(args.gpu_time)
                     else:
                         time.sleep(args.gpu_time)
                 else:

@@ -1,9 +1,7 @@
 # Experiments Settings
 Experiments results and trained models are in the release section
-## Xavier AGX (simulator)
-Use the repo as is
 ## PC with i7 (simulator)
-TODO -- add sleep..
+Use the repo as is
 ## Real car (Jetson TX2) - slow speed (1/8 of max speed)
 f1tenth-rl/rl_car_driver.py
 ```
