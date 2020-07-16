@@ -53,7 +53,7 @@ parser.add_argument("--show-image", type=bool, default=False, help="show the age
 parser.add_argument("--image-width", type=int, default=84, help="the width of the image built from lidar data. Applicable if [lidar-to-image] is true")
 parser.add_argument("--image-height", type=int, default=84, help="the height of the image built from lidar data. Applicable if [lidar-to-image] is true")
 parser.add_argument("--image-zoom", type=int, default=2, help="""zoom lidar image to increase border separation.
-                                It must be appropriate for the circuit max distance and image size otherwise out-of-bound exception will be casted""")
+                                It must be appropriate for the track max distance and image size otherwise out-of-bound exception will be casted""")
 # train parameters
 parser.add_argument("--train-epoch-steps", type=int, default=3500, help="how many steps (1 step = [history-length] frames) to run during a training epoch")
 parser.add_argument("--eval-epoch-steps", type=int, default=500, help="how many steps (1 step = [history-length] frames) to run during an eval epoch")

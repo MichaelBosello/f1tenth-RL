@@ -14,13 +14,13 @@ The DQN implementation provides several techniques to improve performances like 
 Model saving, replay buffer serialization, and tensorboard logging are provided 
 
 ## Introduction
-In our experiment, we want to test *DQN* training directly in the *real world* through realistic 1/10 scale car prototypes capable of performing training in real-time. This allows us to explore the use of RL for autonomous driving in the physical world in a cheap and safe way. In this setting, the driver agent faces all the problems of a not simulated environment, including sensors noise and actuators’ unpredictability. We start with the implementation of DQN on the car, and then we try various alterations to improve performance like reward function engineering and hyper-parameters tuning.
+In our experiment, we want to test *DQN* training directly in the *real world* through realistic 1/10 scale car prototypes capable of performing training in real-time. This allows us to explore the use of RL for autonomous driving in the physical world in a cheap and safe way. In this setting, the driver agent faces all the problems of a not simulated environment, including sensors noise and actuators’ unpredictability. We start with the implementation of DQN on the car, and then we try various alterations to improve performance like reward function engineering and hyper-parameters tuning
 
 ## Experiments
-In the end, the agent successfully learned a control policy, based on lidar data, to drive in a circuit.
-Tensorboard logging and trained models of experiments are provided in the release section.
+In the end, the agent successfully learned a control policy, based on lidar data, to drive in a track.
+Tensorboard logging and trained models of experiments (of both real and simulated car) are provided in the release section. Maps used in simulated experiments are available in the */map* directory. If you want to use these maps, you must edit *simulator.launch* (see below) or copy the one provided in */map*
 
-A video showing the evolution of training and the evaluation is available [here](https://youtu.be/ardg7-7Pevw)
+A video showing the evolution of training and the evaluation of the real car is available [here](https://youtu.be/ardg7-7Pevw)
 
 ![Evaluation run](img/run.gif)
 
@@ -54,7 +54,7 @@ A video showing the evolution of training and the evaluation is available [here]
         Follow the four tutorials (Building the car, system configuration, installing firmware, driving the car) at https://f1tenth.org/build.html to build and setup the car
 
         [**optional**] You need to add to the back of the car one or two IR sensors that are used to safely go backwards when an episode ends (because the hokuyo lidar covers only 270 degrees). Configure your pinout in the file *car/sensors.py*. The Orbitty Carrier has its own method to use gpio (i.e. bash commands). Check the numbers associated to the pins [here](http://connecttech.com/resource-center/kdb342-using-gpio-connect-tech-jetson-tx1-carriers/) and [here](http://connecttech.com/pdf/CTIM-ASG003_Manual.pdf). If you use the developer kit board, you have to implement the methods using Jetson.GPIO. If you use another board, find out how to use gpio and implement the methods.
-        Alternatively, set backward seconds (in *car_control.py*) according to your circuit width, to avoid crashing.
+        Alternatively, set backward seconds (in *car_control.py*) according to your track width, to avoid crashing.
 
     + Simulator
 
@@ -131,7 +131,7 @@ Run the RL algorithm:
 
 + You may want to change the simulator options, check out *simulator/src/f1tenth_simulator/params.yaml*
 
-+ If you want to change the circuit, you must edit *simulator/src/f1tenth_simulator/launch/simulator.launch*
++ If you want to change the track, you must edit *simulator/src/f1tenth_simulator/launch/simulator.launch*
 
     Search for `<arg name="map" default="$(find f1tenth_simulator)/maps/levine.yaml"/>`
     Change *levine* (the default map) with one map present in the folder *simulator/src/f1tenth_simulator/maps*
@@ -147,9 +147,6 @@ You can change the behavior of the actions in *car_env.py*. You can change the a
 Keep in mind that to use a trained model, you must have the same network size, the same input (number and dimension of frame), and the same number of actions
 
 For safety reasons, the car doesn't run at max speed. If you want the car to go faster, modify the constants in *car/car_control.py*
-
-## Trained models
-We provide pre-trained models in the release section
 
 ## Source code structure
 The package *car* provides the interfaces to the car sensors (*sensors.py*) and actuators (*car_control.py*). It contains also a module that ensure the car will not (strongly) hit obstacles (*safety_control.py*)

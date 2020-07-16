@@ -1,0 +1,7 @@
+image: hairpin-track.jpg
+resolution: 0.018
+origin: [-10.5, -1.3, 0.000000]
+negate: 0
+occupied_thresh: 0.65
+free_thresh: 0.196
+
