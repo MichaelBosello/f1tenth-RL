@@ -4,9 +4,6 @@ import os
 import tensorflow as tf
 from tensorflow.keras import layers, initializers, losses, optimizers
 
-import state
-from state import State
-
 class DeepQNetwork:
     def __init__(self, num_actions, state_size, replay_buffer, base_dir, tensorboard_dir, args):
         
