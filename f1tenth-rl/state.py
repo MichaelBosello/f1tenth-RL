@@ -4,6 +4,9 @@ import time
 
 try:
     import cv2
+except ImportError:
+    pass
+try:
     import blosc
 except ImportError:
     pass
