@@ -1,6 +1,10 @@
 # f1tenth-RL
 # (Deep Reinforcement Learning Autonomous Driving Using Lidar in the Physical World)
 
+<img src="img/car_front.jpg" alt="car front" width="720"/>
+
+<img src="img/car_side.jpg" alt="car front" width="1080"/>
+
 Implementation of *DQN* for autonomous racing using *lidar* data
 
 It is designed to running on [f1tenth cars](https://f1tenth.org/)
