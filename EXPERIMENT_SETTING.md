@@ -19,6 +19,14 @@ f1tenth-rl/car_env.py
 USE_VELOCITY_AS_REWARD = True
 ADD_LIDAR_DISTANCE_REWARD = True
 ```
+## CNN2D on PC (simulator)
+f1tenth-rl/rl_car_driver.py
+```
+epsilon-decay = 0.99992
+slowdown-cycle = False
+lidar-to-image = True
+```
+
 # Evaluation only
 ## Real car - high speed (1/4 of max speed)
 Same as above, plus:
