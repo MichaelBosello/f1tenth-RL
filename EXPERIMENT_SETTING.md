@@ -22,7 +22,7 @@ ADD_LIDAR_DISTANCE_REWARD = True
 ## CNN2D on PC (simulator)
 f1tenth-rl/rl_car_driver.py
 ```
-epsilon-decay = 0.99992
+epsilon-decay = 0.999923
 slowdown-cycle = False
 lidar-to-image = True
 ```
