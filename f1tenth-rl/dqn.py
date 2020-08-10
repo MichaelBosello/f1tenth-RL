@@ -77,9 +77,9 @@ class DeepQNetwork:
     def __build_cnn2D(self):
         inputs = tf.keras.Input(shape=(self.image_width, self.image_height, self.history_length))
         x = layers.Lambda(lambda layer: layer / 255)(inputs)
-        x = layers.Conv2D(filters=10, kernel_size=(4, 4), strides=(2, 2), activation='relu', kernel_initializer=initializers.VarianceScaling(scale=2.))(x)
+        x = layers.Conv2D(filters=16, kernel_size=(4, 4), strides=(2, 2), activation='relu', kernel_initializer=initializers.VarianceScaling(scale=2.))(x)
         x = layers.MaxPool2D((2,2))(x)
-        x = layers.Conv2D(filters=5, kernel_size=(2, 2), strides=(1, 1), activation='relu', kernel_initializer=initializers.VarianceScaling(scale=2.))(x)
+        x = layers.Conv2D(filters=8, kernel_size=(2, 2), strides=(1, 1), activation='relu', kernel_initializer=initializers.VarianceScaling(scale=2.))(x)
         x = layers.MaxPool2D((2,2))(x)
         x = layers.Flatten()(x)
         x = layers.Dense(64, activation='relu', kernel_initializer=initializers.VarianceScaling(scale=2.))(x)
