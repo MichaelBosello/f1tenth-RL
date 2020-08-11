@@ -152,6 +152,11 @@ Keep in mind that to use a trained model, you must have the same network size, t
 
 For safety reasons, the car doesn't run at max speed. If you want the car to go faster, modify the constants in *car/car_control.py*
 
+### Load a model
+You can use the --model argument to load a trained model, e.g.:
+
+`python3 rl_car_driver.py --model=./run-real-car/models`
+
 ## Source code structure
 The package *car* provides the interfaces to the car sensors (*sensors.py*) and actuators (*car_control.py*). It contains also a module that ensure the car will not (strongly) hit obstacles (*safety_control.py*)
 
