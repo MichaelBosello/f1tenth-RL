@@ -1,6 +1,12 @@
 # f1tenth-RL
 # (Deep Reinforcement Learning Autonomous Driving Using Lidar in the Physical World)
 
+[[Report](http://apice.unibo.it/xwiki/bin/download/Courses/Sa1920Projects-LidarBosello/f1tenth-report.pdf)]
+[[Project webpage](http://www.apice.unibo.it/xwiki/bin/view/Courses/Sa1920Projects-LidarBosello?language=en)]
+[[Slides](http://apice.unibo.it/xwiki/bin/download/Courses/Sa1920Projects-LidarBosello/f1tenth-RL-slide.pdf)]
+[[Video](https://youtu.be/ardg7-7Pevw)]
+
+
 <img src="img/car_front.jpg" alt="car front" width="720"/>
 
 <img src="img/car_side.jpg" alt="car front" width="1080"/>
