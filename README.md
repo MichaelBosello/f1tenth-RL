@@ -19,7 +19,7 @@ It is designed to running on [f1tenth cars](https://f1tenth.org/)
 
 *It can be used on both the real f1tenth car and on its simulator*
 
-The DQN implementation provides several techniques to improve performances like double DQN, replay buffer, state history, prioritized sampling. It has various parameters (see below) that one can modify to fit the specific environment. There are also various options to pre-process lidar data. One can use lidar data directly or represent them as images containing the environment borders
+The DQN implementation provides several techniques to improve performances like target network, replay buffer, state history, prioritized sampling. It has various parameters (see below) that one can modify to fit the specific environment. There are also various options to pre-process lidar data. One can use lidar data directly or represent them as images containing the environment borders
 
 Model saving, replay buffer serialization, and tensorboard logging are provided 
 
