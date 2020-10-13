@@ -23,6 +23,25 @@ The DQN implementation provides several techniques to improve performances like 
 
 Model saving, replay buffer serialization, and tensorboard logging are provided 
 
+## Paper
+
+If you use this repo, please cite my master's thesis.
+
+*Integrating BDI and Reinforcement Learning: the Case Study of Autonomous Driving*
+
+Michael Bosello.
+[[URL](http://amslaurea.unibo.it/21467/)]
+
+```
+@mastersthesis{amslaurea21467,
+          author = {Michael Bosello},
+           title = {Integrating BDI and Reinforcement Learning: the Case Study of Autonomous Driving},
+             url = {http://amslaurea.unibo.it/21467/},
+          school = {University of Bologna},
+            year = {2020},
+}
+```
+
 ## Introduction
 In our experiment, we want to test *DQN* training directly in the *real world* through realistic 1/10 scale car prototypes capable of performing training in real-time. This allows us to explore the use of RL for autonomous driving in the physical world in a cheap and safe way. In this setting, the driver agent faces all the problems of a not simulated environment, including sensors noise and actuators’ unpredictability. We start with the implementation of DQN on the car, and then we try various alterations to improve performance like reward function engineering and hyper-parameters tuning
 
