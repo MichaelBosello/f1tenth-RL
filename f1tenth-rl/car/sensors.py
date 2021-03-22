@@ -8,8 +8,9 @@ import argparse
 import subprocess
 
 class Sensors():
-    def __init__(self, is_simulator=False):
+    def __init__(self, is_simulator=False, use_back_sensors=False):
         self.is_simulator = is_simulator
+        self.use_back_sensors = use_back_sensors
         self.custom_lidar_callback = None
         self.lidar_data = None
         self.odometry = None
@@ -21,10 +22,11 @@ class Sensors():
         self.odom_subscriber = rospy.Subscriber(odom_topic, Odometry, self.odometry_callback)
 
         if not is_simulator:
-            #Setup pin of Orbitty Carrier for NVIDIA Jetson TX2
-            #check out http://connecttech.com/resource-center/kdb342-using-gpio-connect-tech-jetson-tx1-carriers/
-            subprocess.run('echo 388 > /sys/class/gpio/export', shell=True)
-            subprocess.run('echo 298 > /sys/class/gpio/export', shell=True)
+            if use_back_sensors:
+                #Setup pin of Orbitty Carrier for NVIDIA Jetson TX2
+                #check out http://connecttech.com/resource-center/kdb342-using-gpio-connect-tech-jetson-tx1-carriers/
+                subprocess.run('echo 388 > /sys/class/gpio/export', shell=True)
+                subprocess.run('echo 298 > /sys/class/gpio/export', shell=True)
 
     def add_lidar_callback(self, callback):
         self.custom_lidar_callback = callback
@@ -52,6 +54,8 @@ class Sensors():
 
     def back_obstacle(self):
         if not self.is_simulator:
+            if not self.use_back_sensors:
+                return False
             #Read pin of Orbitty Carrier for NVIDIA Jetson TX2
             #check out http://connecttech.com/resource-center/kdb342-using-gpio-connect-tech-jetson-tx1-carriers/
             lx_value = subprocess.run('cat /sys/class/gpio/gpio298/value', shell=True, stdout=subprocess.PIPE)

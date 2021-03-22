@@ -27,7 +27,7 @@ class CarEnv:
         self.history_length = args.history_length
         self.is_simulator = args.simulator
         rospy.init_node('rl_driver')
-        self.sensors = Sensors(is_simulator=args.simulator)
+        self.sensors = Sensors(is_simulator=args.simulator, use_back_sensors=args.use_back_sensors)
         self.control = Drive(self.sensors, is_simulator=args.simulator)
         self.safety_control = SafetyControl(self.control, self.sensors, is_simulator=args.simulator)
         time.sleep(4)
