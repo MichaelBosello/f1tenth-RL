@@ -133,7 +133,7 @@ class CarEnv:
         return len(self.action_set)
 
     def get_state(self):
-        return self.state.get_data()
+        return self.state
     
     def get_game_number(self):
         return self.game_number

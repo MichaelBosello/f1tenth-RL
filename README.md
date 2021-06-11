@@ -69,6 +69,10 @@ A video showing the evolution of training and the evaluation of the real car is 
 
     You need to install these packets *only if* you want to use the relative function
 
+    To use imitation learning through gamepad control (--gamepad=True):
+
+    `$ pip3 install inputs`
+
     To visualize the images built from lidar data (lidar-to-image = True, show-image = True) you need opencv. *In the Jetson you must build the arm64 version*. In the simulator:
 
     `$ pip3 install opencv-python`
@@ -124,9 +128,7 @@ Check out the configurations for the **real car** and other envs at [EXPERIMENT_
 
 ### Real car
 
-> To let the control to the algorithm: 
-> + you need to hold down the corresponding joystick button (the button depends on your joystick and on the configuration in joy_teleop.yaml, you can test your joystick [here](https://html5gamepad.com/))
-> + Alternatively, you should change the **priority** of the control topics: edit the configuration of **low_level_mux.yaml** in f110_ws/f1tenth_system/racecar/racecar/config. Set priority of topic input/teleop to 1, input/safety to 2 and input/navigation to 3.
+> To let the control to the algorithm, you should change the **priority** of the control topics: edit the configuration of **low_level_mux.yaml** in f110_ws/f1tenth_system/racecar/racecar/config. Set priority of topic input/teleop to 1, input/safety to 2 and input/navigation to 3.
 
 Launch the f1tenth system:
 + Go to the working directory of the f1tenth system (*/f110_ws*)
@@ -183,7 +185,7 @@ You can use the --model argument to load a trained model, e.g.:
 `python3 rl_car_driver.py --model=./run-real-car/models`
 
 ## Source code structure
-The package *car* provides the interfaces to the car sensors (*sensors.py*) and actuators (*car_control.py*). It contains also a module that ensure the car will not (strongly) hit obstacles (*safety_control.py*)
+The package *car* provides the interfaces to the car sensors (*sensors.py*) and actuators (*car_control.py*). It contains also a module that ensure the car will not (strongly) hit obstacles (*safety_control.py*). Finally, gamepad.py is used to retrieve gamepad commands during imitation learning.
 
 *car_env.py* is the Reinforcement Learning environment.
 
@@ -194,6 +196,17 @@ The package *car* provides the interfaces to the car sensors (*sensors.py*) and 
 
 *replay.py* manage the samples and the replay buffer.
 
+*logging.py* write (if enabled) to a CSV all the states, actions, and rewards of every step to build a dataset for offline use. 
+
 ## Use on alternative cars/simulators
 
 One can still use the dqn algorithm in alternative driving environments. You only need to implement your interfaces to the car sensors and actuators. To do so, implement your version of the files in the directory */car*. You are also free to not use ROS at all.
+
+## Imitation Learning 
+
+At the beginning of the training, it could be useful to provide a demonstration of how to drive to the agent. You can help the agent by piloting the car using a joystick. The agent will learn through imitation learning by your demonstration, and then you can switch back to RL to refine and improve the behavior of the agent.
+
+To enable the use of imitation learning, set *--gamepad* to True.
+*The following instructions refer to our joystick, you need to check the corresponding buttons of your joystick and modify the file gamepad.py if needed. Check out the corresponding 'event.code' by pressing your joystick buttons and modify the strings accordingly*
+
+The agent starts in autonomous mode (RL). If you want to switch to manual control (i.e., imitation learning), press the button "A". Press it again to return to autonomous training (RL). Hold down "R2" to accelerate. Use the right analog stick to steer. "R2" works like a dead-man switch: if you release it, the car will stop and the agent will wait for your input.

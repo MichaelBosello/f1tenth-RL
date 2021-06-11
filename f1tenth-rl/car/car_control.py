@@ -1,5 +1,6 @@
 import rospy
 from ackermann_msgs.msg import AckermannDriveStamped
+from rospy.exceptions import ROSException
 
 from threading import Thread
 import time
@@ -89,7 +90,13 @@ class Drive():
 
     def drive_command_runner(self):
         while True:
-            self.drive_publisher.publish(self.ack_msg)
+            try:
+                self.drive_publisher.publish(self.ack_msg)
+            except ROSException as e:
+                if str(e) == "publish() to a closed topic":
+                    pass
+                else:
+                    raise e
             time.sleep(PUBLISHER_WAIT)
 
     def backward_until_obstacle(self):

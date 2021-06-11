@@ -14,6 +14,8 @@ import replay
 import dqn
 from car_env import CarEnv
 from state import State
+from logger import AsyncLogger
+from car.gamepad import Gamepad
 
 #################################
 # parameters
@@ -63,6 +65,8 @@ parser.add_argument("--prioritized-replay", action='store_true', help="prioritiz
 parser.add_argument("--compress-replay", action='store_true', help="if set replay memory will be compressed with blosc, allowing much larger replay capacity")
 parser.add_argument("--save-model-freq", type=int, default=2000, help="save the model every X steps")
 parser.add_argument("--logging", type=bool, default=True, help="enable tensorboard logging")
+parser.add_argument("--env-logging", type=bool, default=False, help="log state, action, reward of every step to build a dataset for later use")
+parser.add_argument("--gamepad", type=bool, default=False, help="log state, action, reward of every step to build a dataset for later use")
 args = parser.parse_args()
 
 print('Arguments: ', (args))
@@ -75,6 +79,8 @@ print('Arguments: ', (args))
 base_output_dir = 'run-out-' + time.strftime("%Y-%m-%d-%H-%M-%S")
 os.makedirs(base_output_dir)
 
+if args.env_logging:
+    env_logger = AsyncLogger(base_output_dir, True)
 tensorboard_dir = base_output_dir + "/tensorboard/"
 os.makedirs(tensorboard_dir)
 summary_writer = tf.summary.create_file_writer(tensorboard_dir)
@@ -87,6 +93,8 @@ environment = CarEnv(args)
 replay_memory = replay.ReplayMemory(base_output_dir, args)
 dqn = dqn.DeepQNetwork(environment.get_num_actions(), environment.get_state_size(),
                         replay_memory, base_output_dir, tensorboard_dir, args)
+if args.gamepad is True:
+    gamepad = Gamepad()
 
 train_epsilon = args.epsilon #don't want to reset epsilon between epoch
 start_time = datetime.datetime.now()
@@ -94,6 +102,7 @@ train_episodes = 0
 eval_episodes = 0
 episode_train_reward_list = []
 episode_eval_reward_list = []
+first_train = True
 
 #################################
 # stop handler
@@ -134,6 +143,7 @@ def run_epoch(min_epoch_steps, eval_with_epsilon=None):
     global eval_episodes
     global episode_train_reward_list
     global episode_eval_reward_list
+    global first_train
     is_training = True if eval_with_epsilon is None else False
     step_start = environment.get_step_number()
     start_game_number = environment.get_game_number()
@@ -143,7 +153,7 @@ def run_epoch(min_epoch_steps, eval_with_epsilon=None):
 
     while environment.get_step_number() - step_start < min_epoch_steps and not stop:
         state_reward = 0
-        state = None
+        state = environment.get_state()
         
         episode_losses = []
         save_net = False
@@ -159,10 +169,20 @@ def run_epoch(min_epoch_steps, eval_with_epsilon=None):
                 epsilon = eval_with_epsilon
 
             # action selection
-            if state is None or random.random() < epsilon:
-                action = random.randrange(environment.get_num_actions())
+            if args.gamepad is True and not gamepad.is_autonomous_mode():
+                action = gamepad.get_action()
+                while action is None:
+                    environment.control.stop()
+                    action = gamepad.get_action()
+                    time.sleep(0.5)
+                    if gamepad.is_autonomous_mode() or stop:
+                        action = 0
             else:
-                action = dqn.inference(state.get_data())
+                if random.random() < epsilon:
+                    action = random.randrange(environment.get_num_actions())
+                else:
+                    action = dqn.inference(state.get_data())
+
 
             # we can't skip frames as in a game
             # we need to wait the evolution of the environment, but we don't want to waste GPU time
@@ -181,6 +201,10 @@ def run_epoch(min_epoch_steps, eval_with_epsilon=None):
                     if environment.get_step_number() > args.observation_steps:
                         if args.show_gpu_time:
                             start_time_train = datetime.datetime.now()
+                        if first_train:
+                            environment.control.stop()
+                            print("LOADING TENSORFLOW MODEL, PLEASE WAIT...")
+                            first_train = False
                         batch = replay_memory.draw_batch(args.batch_size)
                         loss = dqn.train(batch, environment.get_step_number())
                         episode_losses.append(loss)
@@ -199,6 +223,9 @@ def run_epoch(min_epoch_steps, eval_with_epsilon=None):
                 
                 if is_terminal:
                     break
+
+            if args.env_logging:
+                env_logger.rl_log(environment.get_game_number(), old_state.get_data(), action, reward)
 
             # Record experience in replay memory
             if is_training and old_state is not None:
