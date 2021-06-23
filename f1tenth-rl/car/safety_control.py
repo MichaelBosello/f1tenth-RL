@@ -7,13 +7,17 @@ import argparse
 import time
 
 TTC_THRESHOLD_SIM = 0.37
-TTC_THRESHOLD_REAL_CAR = 0.62
+TTC_THRESHOLD_REAL_CAR = 1.22
 
-EUCLIDEAN_THRESHOLD_SIM = 0.45
-EUCLIDEAN_THRESHOLD_REAL_CAR = 0.08
+EUCLIDEAN_THRESHOLD_SIM = 0.48
+EUCLIDEAN_THRESHOLD_REAL_CAR = 0.36
 
 USE_TTC_SIM = False
 USE_TTC_REAL_CAR = True
+
+#if your circuit has only an external perimeter barrier and you want to simulate a lane
+ONLY_EXTERNAL_BARRIER = True
+EXTERNAL_BARRIER_THRESHOLD = 2.8
 
 class SafetyControl():
     def __init__(self, drive, sensors, is_simulator=False):
@@ -48,6 +52,9 @@ class SafetyControl():
             if min(lidar_data.ranges) < self.euclidean_treshold:
                 self.emergency_brake = True
 
+            if ONLY_EXTERNAL_BARRIER and min(lidar_data.ranges) > EXTERNAL_BARRIER_THRESHOLD:
+                self.emergency_brake = True
+
             if self.emergency_brake:
                 self.drive.stop()
 
@@ -61,12 +68,17 @@ class SafetyControl():
         self.safety = True
 
 if __name__ == '__main__':
+    from sensors import Sensors
+    from car_control import Drive
+
     parser = argparse.ArgumentParser()
     parser.add_argument("--simulator", action='store_true', help="to set the use of the simulator")
     args = parser.parse_args()
 
     rospy.init_node('safety_control_test')
-    safety_control = SafetyControl(args.simulator)
+    sensors = Sensors(args.simulator)
+    drive = Drive(sensors, args.simulator)
+    safety_control = SafetyControl(drive, sensors, args.simulator)
     time.sleep(0.5)
     while not safety_control.emergency_brake:
         safety_control.drive.forward()
