@@ -1,4 +1,3 @@
-
 try:
     from inputs import get_gamepad
 except ImportError:
@@ -34,22 +33,26 @@ class Gamepad():
             self.gamepad = gamepad
         def run(self):
             while True:
-                events = get_gamepad()
+                try:
+                    events = get_gamepad()
+                except:
+                    self.gamepad.dead_man_switch = False
+                    continue
                 for event in events:
                     if event.code == "BTN_SOUTH" and event.state == 0:
                         self.gamepad.autonomous_mode = not self.gamepad.autonomous_mode
-                    elif event.code == "BTN_TR2" and event.state == 1:
+                    elif event.code == "ABS_RZ" and event.state > 200:
                         self.gamepad.dead_man_switch = True
-                    elif event.code == "BTN_TR2" and event.state == 0:
+                    elif event.code == "ABS_RZ" and event.state <= 200:
                         self.gamepad.dead_man_switch = False
-                    elif event.code == "ABS_Z" and event.state > 141:
+                    elif event.code == "ABS_RX" and event.state > 20000:
                         self.gamepad.direction = RIGHT_ACTION
-                    elif event.code == "ABS_Z" and event.state < 90:
+                    elif event.code == "ABS_RX" and event.state < -20000:
                         self.gamepad.direction = LEFT_ACTION
-                    elif event.code == "ABS_Z" or event.code == "ABS_Z":
+                    elif event.code == "ABS_RX" or event.code == "ABS_Z":
                         self.gamepad.direction = FORWARD_ACTION
-                    #uncomment this if you need to check the event.code of your gamepad
-                    #print(event.ev_type, event.code, event.state)
+                #uncomment this if you need to check the event.code of your gamepad
+                #print(event.ev_type, event.code, event.state)
 
 
 
