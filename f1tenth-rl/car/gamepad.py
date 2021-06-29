@@ -1,7 +1,9 @@
 try:
-    from inputs import get_gamepad
+    import inputs
 except ImportError:
     pass
+
+from importlib import reload
 from threading import Thread
 import time
 
@@ -34,9 +36,11 @@ class Gamepad():
         def run(self):
             while True:
                 try:
-                    events = get_gamepad()
+                    events = inputs.get_gamepad()
                 except:
                     self.gamepad.dead_man_switch = False
+                    reload(inputs)
+                    time.sleep(1)
                     continue
                 for event in events:
                     if event.code == "BTN_SOUTH" and event.state == 0:
