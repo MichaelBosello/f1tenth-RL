@@ -64,12 +64,15 @@ class State:
         if State.lidar_to_image:
             return self.lidar_to_img(data)
 
+        #we have the same max value for sampling errors and max range exceeding
+        #thus, we compute the reduction on the values under the max range and then we sobstitute the max value to the empty sets that resulted in 0
+
         if State.lidar_reduction_method == 'avg':
             data_avg = []
             for i in range(0, len(data), State.reduce_by):
                 filtered = list(filter(lambda x:  x <= State.max_distance_norm, data[i:i + State.reduce_by]))
                 if len(filtered) == 0:
-                    data_avg.append(0)
+                    data_avg.append(State.max_distance_norm)
                 else:
                     data_avg.append(sum(filtered)/len(filtered))
             data = data_avg
@@ -78,6 +81,7 @@ class State:
         if State.lidar_reduction_method == 'max':
             data = [i if i <= State.max_distance_norm else 0 for i in data]
             data = [max(data[i:i + State.reduce_by]) for i in range(0, len(data), State.reduce_by)]
+            data = [i if i > 0 else State.max_distance_norm for i in data]
         if State.lidar_reduction_method == 'min':
             data = [min(data[i:i + State.reduce_by]) for i in range(0, len(data), State.reduce_by)]
 
