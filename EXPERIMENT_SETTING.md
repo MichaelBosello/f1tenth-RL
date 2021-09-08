@@ -2,32 +2,41 @@
 Experiments results and trained models are in the release section
 
 ## Sim2real experiment 2, Transfer learning (run-unibo-roof.zip)
+Training: simulation, PC with i7, unibo-roof map
+Testing: real car with Jetson NX
 
-safety_control.py
+f1tenth-rl/car/safety_control.py
 ```
 ONLY_EXTERNAL_BARRIER = True
 ```
 
-Training: simulation, PC with i7, unibo-roof map
-Testing: real car with Jetson NX
+---
+**Testing**
+
+f1tenth-rl/rl_car_driver.py
+```
+slowdown-cycle = False
+reduce-lidar-data = 36
+cut-lidar-data = 5 
+```
 
 ## NNs comparison experiment 
 simulation, PC with i7, hairpin-track map
 
-car_control.py
+f1tenth-rl/car/car_control.py
 ```
 MAX_SPEED_REDUCTION_SIM = 3
 STEERING_SPEED_REDUCTION_SIM = 3
 BACKWARD_SPEED_REDUCTION_SIM = 3
 BACKWARD_SECONDS_SIM = 1.8
 ```
-safety_control.py
+f1tenth-rl/car/safety_control.py
 ```
 EUCLIDEAN_THRESHOLD_SIM = 0.48
 USE_TTC_SIM = False
 ```
 
-car_env.py
+f1tenth-rl/car_env.py
 ```
 self.control.forward()
             reward = 0.2
@@ -53,7 +62,7 @@ cut-lidar-data = 8
 ### Dense (run-hairpin-track-simulator-dense.zip)
 same as above, plus:
 
-dqn.py
+f1tenth-rl/dqn.py
 ```
     def __build_q_net(self):
         ...
@@ -73,7 +82,7 @@ lidar-to-image = True
 
 Jetson TX2 - slow speed (1/8 of max speed)
 
-car_control.py
+f1tenth-rl/car/car_control.py
 ```
 MAX_SPEED_REDUCTION = 8
 STEERING_SPEED_REDUCTION = 8
@@ -81,7 +90,7 @@ BACKWARD_SPEED_REDUCTION = 8
 BACKWARD_SECONDS = 1.8
 ```
 
-safety_control.py
+f1tenth-rl/car/safety_control.py
 ```
 TTC_THRESHOLD_REAL_CAR = 0.62
 EUCLIDEAN_THRESHOLD_REAL_CAR = 0.08
@@ -115,7 +124,7 @@ gpu-time = 0.001
 train-epoch-steps = 0
 save-model-freq = 1000000
 ```
-f1tenth-rl/car_control.py
+f1tenth-rl/car/car_control.py
 ```
 MAX_SPEED_REDUCTION = 4
 STEERING_SPEED_REDUCTION = 4
