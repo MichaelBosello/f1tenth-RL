@@ -6,18 +6,18 @@ import math
 import argparse
 import time
 
-TTC_THRESHOLD_SIM = 0.37
-TTC_THRESHOLD_REAL_CAR = 1.22
+TTC_THRESHOLD_SIM = 1.21
+TTC_THRESHOLD_REAL_CAR = 1.21
 
-EUCLIDEAN_THRESHOLD_SIM = 0.48
-EUCLIDEAN_THRESHOLD_REAL_CAR = 0.36
+EUCLIDEAN_THRESHOLD_SIM = 0.35
+EUCLIDEAN_THRESHOLD_REAL_CAR = 0.35
 
-USE_TTC_SIM = False
+USE_TTC_SIM = True
 USE_TTC_REAL_CAR = True
 
 #if your circuit has only an external perimeter barrier and you want to simulate a lane
-ONLY_EXTERNAL_BARRIER = True
-EXTERNAL_BARRIER_THRESHOLD = 2.8
+ONLY_EXTERNAL_BARRIER = False
+EXTERNAL_BARRIER_THRESHOLD = 2.73
 
 class SafetyControl():
     def __init__(self, drive, sensors, is_simulator=False):
