@@ -1,8 +1,9 @@
 # Experiments Settings (chronological order)
 Experiments results and trained models are in the release section
 
-## Sim2real experiment 2, Transfer learning (run-unibo-roof.zip)
+## Sim2real experiment 2: transfer learning (run-unibo-roof.zip)
 Training: simulation, PC with i7, unibo-roof map
+
 Testing: real car with Jetson NX
 
 f1tenth-rl/car/safety_control.py
@@ -60,7 +61,7 @@ cut-lidar-data = 8
 ```
 
 ### Dense (run-hairpin-track-simulator-dense.zip)
-same as above, plus:
+same as CNN1D, plus:
 
 f1tenth-rl/dqn.py
 ```
@@ -70,6 +71,7 @@ f1tenth-rl/dqn.py
 ```
 
 ### CNN2D (run-hairpin-track-simulator-cnn2d.zip)
+same as CNN1D, plus:
 
 f1tenth-rl/rl_car_driver.py
 ```
@@ -78,7 +80,7 @@ slowdown-cycle = False
 lidar-to-image = True
 ```
 
-## Sim2real experiment 1, training on the physical car (run-real-car.zip)
+## Sim2real experiment 1: training on the physical car (run-real-car.zip)
 
 Jetson TX2 - slow speed (1/8 of max speed)
 
