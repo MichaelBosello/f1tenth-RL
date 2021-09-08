@@ -1,8 +1,92 @@
-# Experiments Settings
+# Experiments Settings (chronological order)
 Experiments results and trained models are in the release section
-## PC with i7 (simulator)
-Use the repo as is
-## Real car (Jetson TX2) - slow speed (1/8 of max speed)
+
+## Sim2real experiment 2, Transfer learning (run-unibo-roof.zip)
+
+safety_control.py
+```
+ONLY_EXTERNAL_BARRIER = True
+```
+
+Training: simulation, PC with i7, unibo-roof map
+Testing: real car with Jetson NX
+
+## NNs comparison experiment 
+simulation, PC with i7, hairpin-track map
+
+car_control.py
+```
+MAX_SPEED_REDUCTION_SIM = 3
+STEERING_SPEED_REDUCTION_SIM = 3
+BACKWARD_SPEED_REDUCTION_SIM = 3
+BACKWARD_SECONDS_SIM = 1.8
+```
+safety_control.py
+```
+EUCLIDEAN_THRESHOLD_SIM = 0.48
+USE_TTC_SIM = False
+```
+
+car_env.py
+```
+self.control.forward()
+            reward = 0.2
+...
+self.control.right()
+            reward = 0.05
+...
+self.control.left()
+            reward = 0.05
+```
+
+### CNN1D (run-hairpin-track-simulator-cnn1d.zip)
+
+f1tenth-rl/rl_car_driver.py
+```
+epsilon-decay = 0.9999342
+observation-steps = 400
+gpu-time = 0.014
+reduce-lidar-data = 30
+cut-lidar-data = 8 
+```
+
+### Dense (run-hairpin-track-simulator-dense.zip)
+same as above, plus:
+
+dqn.py
+```
+    def __build_q_net(self):
+        ...
+            return self.__build_dense()
+```
+
+### CNN2D (run-hairpin-track-simulator-cnn2d.zip)
+
+f1tenth-rl/rl_car_driver.py
+```
+epsilon-decay = 0.99992
+slowdown-cycle = False
+lidar-to-image = True
+```
+
+## Sim2real experiment 1, training on the physical car (run-real-car.zip)
+
+Jetson TX2 - slow speed (1/8 of max speed)
+
+car_control.py
+```
+MAX_SPEED_REDUCTION = 8
+STEERING_SPEED_REDUCTION = 8
+BACKWARD_SPEED_REDUCTION = 8
+BACKWARD_SECONDS = 1.8
+```
+
+safety_control.py
+```
+TTC_THRESHOLD_REAL_CAR = 0.62
+EUCLIDEAN_THRESHOLD_REAL_CAR = 0.08
+```
+
 f1tenth-rl/rl_car_driver.py
 ```
 epsilon-decay = 0.9998
@@ -18,17 +102,11 @@ f1tenth-rl/car_env.py
 ```
 USE_VELOCITY_AS_REWARD = True
 ADD_LIDAR_DISTANCE_REWARD = True
+VELOCITY_NORMALIZATION = 0.55
 ```
-## CNN2D on PC (simulator)
-f1tenth-rl/rl_car_driver.py
-```
-epsilon-decay = 0.99992
-slowdown-cycle = False
-lidar-to-image = True
-```
+---
+Evaluation only - high speed (1/4 of max speed)
 
-# Evaluation only
-## Real car - high speed (1/4 of max speed)
 Same as above, plus:
 
 f1tenth-rl/rl_car_driver.py
