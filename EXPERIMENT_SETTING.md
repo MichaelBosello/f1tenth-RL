@@ -1,10 +1,20 @@
 # Experiments Settings (chronological order)
 Experiments results and trained models are in the release section
 
-## F1 racetracks experiment
+## F1 racetracks experiment (run-f1-tracks.zip)
 Simulation, PC with i7, maps: f1_aut, f1_esp, f1_gbr, f1_mco
 
 Use the repo as is
+
+---
+**Testing**
+f1tenth-rl/rl_car_driver.py
+```
+gpu-time = 0.0001
+train-epoch-steps = 0
+save-model-freq = 1000000
+```
+
 
 ## Sim2real experiment 2: transfer learning (run-unibo-roof.zip)
 Training: simulation, PC with i7, unibo-roof map
@@ -41,10 +51,11 @@ self.action_set = [0, 1, 2]
 
 ---
 **Testing**
-
 f1tenth-rl/rl_car_driver.py
 ```
-slowdown-cycle = False
+gpu-time = 0.0001
+train-epoch-steps = 0
+save-model-freq = 1000000
 reduce-lidar-data = 36
 cut-lidar-data = 5 
 ```
