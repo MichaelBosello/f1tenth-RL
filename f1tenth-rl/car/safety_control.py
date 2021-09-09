@@ -6,7 +6,7 @@ import math
 import argparse
 import time
 
-TTC_THRESHOLD_SIM = 1.21
+TTC_THRESHOLD_SIM = 0.37
 TTC_THRESHOLD_REAL_CAR = 1.21
 
 EUCLIDEAN_THRESHOLD_SIM = 0.35
