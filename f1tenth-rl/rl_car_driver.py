@@ -50,6 +50,7 @@ parser.add_argument("--cut-lidar-data", type=int, default=10, help="N element at
 parser.add_argument("--max-distance-norm", type=float, default=20, help="divide lidar elems by [max-distance-norm] to normalize between [0, 1]")
 parser.add_argument("--lidar-reduction-method", choices=['avg', 'max', 'min', 'sampling'], default='avg', type=str.lower, help="method used to aggregate lidar data")
 parser.add_argument("--lidar-float-cut", type=int, default=-1, help="how many decimals of lidar ranges to take. -1 for no cutting")
+parser.add_argument("--add-velocity", type=bool, default=True, help="if true, it adds the velocity to the state (the NN is extended)")
 
 parser.add_argument("--lidar-to-image", type=bool, default=False, help="if true, an image of borders is built from lidar ranges and it is used as state")
 parser.add_argument("--show-image", type=bool, default=False, help="show the agent view. [lidar-to-image] must be true to have effect")

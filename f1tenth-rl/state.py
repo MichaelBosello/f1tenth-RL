@@ -20,6 +20,7 @@ class State:
         State.reduce_by = args.reduce_lidar_data
         State.cut_by = args.cut_lidar_data
         State.max_distance_norm = args.max_distance_norm
+        State.add_velocity = args.add_velocity
 
         State.lidar_reduction_method = args.lidar_reduction_method
         State.lidar_float_cut = args.lidar_float_cut
@@ -57,16 +58,23 @@ class State:
 
         if State.lidar_to_image:
             return np.asarray(state).reshape((State.image_width, State.image_height, State.history_length))
+        elif State.add_velocity:
+            lidar_state = [state[0][0], state[1][0]]
+            acc_state = [state[0][1], state[1][1]]
+            return [np.asarray(lidar_state).reshape((len(lidar_state[0]), State.history_length)), np.asarray(acc_state)]
         else:
             return np.asarray(state).reshape((len(state[0]), State.history_length))
 
     def process_data(self, data):
+        if State.add_velocity:
+            lidar_data, acelleration_value = data[:-1], data[-1]
+            data = lidar_data
+
         if State.lidar_to_image:
             return self.lidar_to_img(data)
 
         #we have the same max value for sampling errors and max range exceeding
         #thus, we compute the reduction on the values under the max range and then we sobstitute the max value to the empty sets that resulted in 0
-
         if State.lidar_reduction_method == 'avg':
             data_avg = []
             for i in range(0, len(data), State.reduce_by):
@@ -90,7 +98,11 @@ class State:
             data = [x / State.max_distance_norm for x in data]
         if State.lidar_float_cut > -1:
             data = [round(x, State.lidar_float_cut) for x in data]
-        return data
+
+        if State.add_velocity:
+            return (data, acelleration_value)
+        else:
+            return data
 
     def lidar_to_img(self, data):
         img_array = np.zeros((State.image_width, State.image_height), dtype=np.uint8)
