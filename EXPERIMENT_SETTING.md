@@ -1,14 +1,42 @@
 # Experiments Settings (chronological order)
 Experiments results and trained models are in the release section
 
+## F1 racetracks experiment
+Simulation, PC with i7, maps: f1_aut, f1_esp, f1_gbr, f1_mco
+
+Use the repo as is
+
 ## Sim2real experiment 2: transfer learning (run-unibo-roof.zip)
 Training: simulation, PC with i7, unibo-roof map
 
 Testing: real car with Jetson NX
 
+f1tenth-rl/rl_car_driver.py
+```
+epsilon-decay = 0.99993
+gpu-time = 0.018
+add-velocity = False
+```
+
 f1tenth-rl/car/safety_control.py
 ```
+TTC_THRESHOLD_SIM = 1.21
 ONLY_EXTERNAL_BARRIER = True
+```
+
+f1tenth-rl/car/car_control.py
+```
+MAX_SPEED_REDUCTION_SIM = 4.5
+STEERING_SPEED_REDUCTION_SIM = 4.5
+BACKWARD_SPEED_REDUCTION_SIM = 4.5
+```
+
+f1tenth-rl/car_env.py
+```
+USE_VELOCITY_AS_REWARD = False
+ADD_LIDAR_DISTANCE_REWARD = False
+...
+self.action_set = [0, 1, 2]
 ```
 
 ---
@@ -22,7 +50,12 @@ cut-lidar-data = 5
 ```
 
 ## NNs comparison experiment 
-simulation, PC with i7, hairpin-track map
+Simulation, PC with i7, hairpin-track map
+
+f1tenth-rl/rl_car_driver.py
+```
+add-velocity = False
+```
 
 f1tenth-rl/car/car_control.py
 ```
@@ -39,6 +72,12 @@ USE_TTC_SIM = False
 
 f1tenth-rl/car_env.py
 ```
+USE_VELOCITY_AS_REWARD = False
+ADD_LIDAR_DISTANCE_REWARD = False
+...
+self.action_set = [0, 1, 2]
+...
+
 self.control.forward()
             reward = 0.2
 ...
@@ -108,12 +147,17 @@ reduce-lidar-data = 36
 cut-lidar-data = 5
 max-distance-norm = 5
 save-model-freq = 5000
+add-velocity = False
 ```
+
 f1tenth-rl/car_env.py
 ```
 USE_VELOCITY_AS_REWARD = True
 ADD_LIDAR_DISTANCE_REWARD = True
+LIDAR_DISTANCE_WEIGHT = 0.1
 VELOCITY_NORMALIZATION = 0.55
+...
+self.action_set = [0, 1, 2]
 ```
 ---
 Evaluation only - high speed (1/4 of max speed)
