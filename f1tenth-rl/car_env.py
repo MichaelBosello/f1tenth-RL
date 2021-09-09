@@ -13,11 +13,12 @@ from car.sensors import Sensors
 MAX_STOP = 3
 
 # you can set the reward according to the action performed or according to the linear velocity of the car
-USE_VELOCITY_AS_REWARD = False
-ADD_LIDAR_DISTANCE_REWARD = False
-LIDAR_DISTANCE_WEIGHT = 0.1
+USE_VELOCITY_AS_REWARD = True
+ADD_LIDAR_DISTANCE_REWARD = True
+LIDAR_DISTANCE_WEIGHT = 0.01
 
-VELOCITY_NORMALIZATION = 0.4 # normalize the velocity between 0 and 1 (e.g. max velocity = 1.8 => 1.8*0.55 =~ 1)
+# 0.55 real car 1/6 speed --- 0.46 simulator 1/3 speed
+VELOCITY_NORMALIZATION = 0.3 # normalize the velocity between 0 and 1 (e.g. max velocity = 1.8 => 1.8*0.55 =~ 1)
 REWARD_SCALING = 0.09 # scale the velocity rewards between [0, REWARD_SCALING]. I.e. at max velocity the reward is REWARD_SCALING
 
 class CarEnv:
@@ -25,6 +26,7 @@ class CarEnv:
     def __init__(self, args):
         self.history_length = args.history_length
         self.is_simulator = args.simulator
+        self.add_velocity = args.add_velocity
         rospy.init_node('rl_driver')
         self.sensors = Sensors(is_simulator=args.simulator, use_back_sensors=args.use_back_sensors)
         self.control = Drive(self.sensors, is_simulator=args.simulator)
@@ -32,7 +34,7 @@ class CarEnv:
         time.sleep(4)
 
         # available actions
-        self.action_set = [0, 1, 2]
+        self.action_set = [0, 1, 2, 3]
 
         self.game_number = 0
         self.step_number = 0
@@ -80,12 +82,15 @@ class CarEnv:
             self.control.left()
             reward = 0.02
         elif action == 3:
+            self.control.slowdown()
+            reward = 0
+        elif action == 4:
             self.control.lightly_right()
             reward = 0.01
-        elif action == 4:
+        elif action == 5:
             self.control.lightly_left()
             reward = 0.01
-        elif action == 5:
+        elif action == 6:
             self.control.stop()
             reward = -0.01
             self.car_stop_count += 1
@@ -122,11 +127,16 @@ class CarEnv:
 
     def _get_car_state(self):
         current_data = list(self.sensors.get_lidar_ranges())
+        if self.add_velocity:
+            current_data.append(self.sensors.get_car_linear_acelleration())
         return current_data
 
 
     def get_state_size(self):
-        return len(self.state.get_data())
+        if self.add_velocity:
+            return len(self.state.get_data()[0])
+        else:
+            return len(self.state.get_data())
 
     def get_num_actions(self):
         return len(self.action_set)
