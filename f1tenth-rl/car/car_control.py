@@ -24,12 +24,14 @@ BACKWARD_SPEED_REDUCTION = 4.5
 LIGHTLY_STEERING_REDUCTION = 2.4
 BACKWARD_SECONDS = 1.5
 
-MAX_SPEED_REDUCTION_SIM = 4.5
-STEERING_SPEED_REDUCTION_SIM = 4.5
-BACKWARD_SPEED_REDUCTION_SIM = 4.5
+MAX_SPEED_REDUCTION_SIM = 1
+STEERING_SPEED_REDUCTION_SIM = 1.4
+BACKWARD_SPEED_REDUCTION_SIM = 3
 LIGHTLY_STEERING_REDUCTION_SIM = 2.4
 BACKWARD_SECONDS_SIM = 1.5
 USE_RESET_INSTEAD_OF_BACKWARDS_SIM = False
+
+MIN_SPEED_REDUCTION = 5
 
 class Drive():
     def __init__(self, sensors, is_simulator=False):
@@ -82,7 +84,13 @@ class Drive():
     def lightly_left(self):
         self.send_drive_command(self.max_speed/self.steering_speed_reduction, self.max_steering/self.lightly_steering_reduction)
 
+    def slowdown(self):
+        speed = self.last_speed/2 if self.last_speed/2 > self.max_speed/MIN_SPEED_REDUCTION else self.max_speed/MIN_SPEED_REDUCTION
+        self.send_drive_command(speed, self.last_angle)
+
     def send_drive_command(self, speed, steering_angle):
+        self.last_angle = steering_angle
+        self.last_speed = speed
         ack_msg = AckermannDriveStamped()
         ack_msg.drive.speed = speed
         ack_msg.drive.steering_angle = steering_angle
