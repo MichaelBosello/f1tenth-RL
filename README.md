@@ -1,10 +1,10 @@
-# f1tenth-RL
-# (Deep Reinforcement Learning Autonomous Driving Using Lidar in the Physical World)
+# F1tenth-RL
+# Train in Austria, Race in Montecarlo: Cross-Track Driving LIDAR equipped F1tenth with Deep RL
 
+[[Thesis](http://amslaurea.unibo.it/21467/)]
 [[Report](http://apice.unibo.it/xwiki/bin/download/Courses/Sa1920Projects-LidarBosello/f1tenth-report.pdf)]
-[[Project webpage](http://www.apice.unibo.it/xwiki/bin/view/Courses/Sa1920Projects-LidarBosello?language=en)]
 [[Slides](http://apice.unibo.it/xwiki/bin/download/Courses/Sa1920Projects-LidarBosello/f1tenth-RL-slide.pdf)]
-[[Video](https://youtu.be/ardg7-7Pevw)]
+[[Training on the physical car Video](https://youtu.be/ardg7-7Pevw)]
 
 
 <img src="img/car_front.jpg" alt="car front" width="720"/>
@@ -19,13 +19,15 @@ It is designed to running on [f1tenth cars](https://f1tenth.org/)
 
 *It can be used on both the real f1tenth car and on its simulator*
 
-The DQN implementation provides several techniques to improve performances like target network, replay buffer, state history, prioritized sampling. It has various parameters (see below) that one can modify to fit the specific environment. There are also various options to pre-process lidar data. One can use lidar data directly or represent them as images containing the environment borders
+The DQN implementation provides several techniques to improve performances like target network, replay buffer, state history, prioritized sampling. It has various parameters (see below) that one can modify to fit the specific environment. There are also various options to pre-process lidar data. One can use lidar data directly or represent them as images containing the environment borders. Velocity can be added to to the state
 
 Model saving, replay buffer serialization, and tensorboard logging are provided 
 
 ## Paper
 
-If you use this repo, please cite my master's thesis.
+If you use this repo, please cite my master's thesis
+
+_Updated paper will be published soon_
 
 *Integrating BDI and Reinforcement Learning: the Case Study of Autonomous Driving*
 
@@ -43,13 +45,30 @@ Michael Bosello.
 ```
 
 ## Introduction
-In our experiment, we want to test *DQN* training directly in the *real world* through realistic 1/10 scale car prototypes capable of performing training in real-time. This allows us to explore the use of RL for autonomous driving in the physical world in a cheap and safe way. In this setting, the driver agent faces all the problems of a not simulated environment, including sensors noise and actuators’ unpredictability. We start with the implementation of DQN on the car, and then we try various alterations to improve performance like reward function engineering and hyper-parameters tuning
+_Abstract_ &mdash; Autonomous vehicles have received great attention in the last years, promising to impact a market worth billions. Nevertheless, the dream of fully autonomous cars has been delayed with current self-driving systems relying on complex processes coupled with supervised learning techniques. The deep reinforcement learning approach gives us newer possibilities to solve complex control tasks like the ones required by autonomous vehicles. It let the agent learn by interacting with the environment and from its mistakes. Unfortunately, RL is mainly applied in simulated environments, and transferring learning from simulations to the real world is a hard problem. In this paper, we use LIDAR data as input of a Deep Q-Network on a realistic 1/10 scale car prototype capable of performing training in real-time. The robot-driver learns how to run in race tracks by exploiting the experience gained through a mechanism of rewards that allow the agent to learn without human supervision. We provide a comparison of neural networks to find the best one for LIDAR data processing, two approaches to address the sim2real problem, and a detail of the performances of DQN in time-lap tasks for racing robots.
 
 ## Experiments
-In the end, the agent successfully learned a control policy, based on lidar data, to drive in a track.
+
+Three experiments have been performed (more details in the paper):
+
++ NN comparison experiment: compares the performance of 1D CNN, 2D CNN, and fully-connected networks when used to detect LIDAR data
++ Sim2real experiment, Training on the physical car: training the agent directly in the real world using real LIDAR data as input
++ Sim2real experiment, Transfer learning: training the agent in the simulator and use the model in F1tenth car without any retraining thanks to our LIDAR pre-processing algorithm
++ F1 racetracks experiment: demonstrates the race-performance, sample efficiency, and generalization capability of DQN through simulations in challenging F1 racetracks
+
 Tensorboard logging and trained models of experiments (of both real and simulated car) are provided in the release section. Maps used in simulated experiments are available in the */map* directory. If you want to use these maps, you must edit *simulator.launch* (see below) or copy the one provided in */map*
 
-A video showing the evolution of training and the evaluation of the real car is available [here](https://youtu.be/ardg7-7Pevw)
+F1 track maps came from [this](https://github.com/CPS-TUWien/racing_dreamer) GitHub repo. You can find more maps [here](https://github.com/f1tenth/f1tenth_racetracks)
+
+Sim2real experiments videos:
+
++ Training on the physical car
+
+    A video showing the evolution of training and the evaluation of the real car in the sim2real experiment is available [here](https://youtu.be/ardg7-7Pevw)
+
++ Transfer learning
+
+    Coming soon
 
 ![Evaluation run](img/run.gif)
 
@@ -103,7 +122,7 @@ A video showing the evolution of training and the evaluation of the real car is 
 
         `$ catkin_make`
 
-5) Install tensorflow 2.1.x
+5) Install tensorflow 2.x
 
     + If you are on a *PC* (i.e. simulator)
 
@@ -177,7 +196,7 @@ You can change the behavior of the actions in *car_env.py*. You can change the a
 
 Keep in mind that to use a trained model, you must have the same network size, the same input (number and dimension of frame), and the same number of actions
 
-For safety reasons, the car doesn't run at max speed. If you want the car to go faster, modify the constants in *car/car_control.py*
+If you want to limit the car velocity, modify the constants in *car/car_control.py*
 
 ### Load a model
 You can use the --model argument to load a trained model, e.g.:
