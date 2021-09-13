@@ -12,6 +12,7 @@ f1tenth-rl/rl_car_driver.py
 ```
 gpu-time = 0.0001
 train-epoch-steps = 0
+max-step-limit = 10000000
 save-model-freq = 1000000
 ```
 
@@ -30,6 +31,7 @@ add-velocity = False
 
 f1tenth-rl/car/safety_control.py
 ```
+USE_TTC_SIM = True
 TTC_THRESHOLD_SIM = 1.21
 ONLY_EXTERNAL_BARRIER = True
 ```
@@ -56,6 +58,7 @@ f1tenth-rl/rl_car_driver.py
 gpu-time = 0.0001
 train-epoch-steps = 0
 save-model-freq = 1000000
+max-step-limit = 10000000
 reduce-lidar-data = 36
 cut-lidar-data = 5 
 ```
@@ -144,6 +147,7 @@ BACKWARD_SECONDS = 1.8
 
 f1tenth-rl/car/safety_control.py
 ```
+USE_TTC = True
 TTC_THRESHOLD_REAL_CAR = 0.62
 EUCLIDEAN_THRESHOLD_REAL_CAR = 0.08
 ```
@@ -180,6 +184,7 @@ f1tenth-rl/rl_car_driver.py
 gpu-time = 0.001
 train-epoch-steps = 0
 save-model-freq = 1000000
+max-step-limit = 10000000
 ```
 f1tenth-rl/car/car_control.py
 ```

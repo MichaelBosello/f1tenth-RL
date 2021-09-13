@@ -12,7 +12,7 @@ TTC_THRESHOLD_REAL_CAR = 1.21
 EUCLIDEAN_THRESHOLD_SIM = 0.35
 EUCLIDEAN_THRESHOLD_REAL_CAR = 0.35
 
-USE_TTC_SIM = True
+USE_TTC_SIM = False
 USE_TTC_REAL_CAR = True
 
 #if your circuit has only an external perimeter barrier and you want to simulate a lane
