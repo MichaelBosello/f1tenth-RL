@@ -17,7 +17,6 @@ USE_VELOCITY_AS_REWARD = True
 ADD_LIDAR_DISTANCE_REWARD = True
 LIDAR_DISTANCE_WEIGHT = 0.01
 
-# 0.55 real car 1/6 speed --- 0.46 simulator 1/3 speed
 VELOCITY_NORMALIZATION = 0.3 # normalize the velocity between 0 and 1 (e.g. max velocity = 1.8 => 1.8*0.55 =~ 1)
 REWARD_SCALING = 0.09 # scale the velocity rewards between [0, REWARD_SCALING]. I.e. at max velocity the reward is REWARD_SCALING
 
@@ -97,7 +96,7 @@ class CarEnv:
         else:
             raise ValueError('`action` should be between 0 and ' + str(len(self.action_set)-1))
 
-        if action != 5:
+        if action != 6:
             self.car_stop_count = 0
 
         if self.car_stop_count > MAX_STOP * self.history_length:
