@@ -55,7 +55,7 @@ self.action_set = [0, 1, 2]
 **Testing**
 f1tenth-rl/rl_car_driver.py
 ```
-gpu-time = 0.0001
+gpu-time = 0.001
 train-epoch-steps = 0
 save-model-freq = 1000000
 max-step-limit = 10000000
