@@ -67,7 +67,7 @@ class State:
 
     def process_data(self, data):
         if State.add_velocity:
-            lidar_data, acelleration_value = data[:-1], data[-1]
+            lidar_data, acceleration_value = data[:-1], data[-1]
             data = lidar_data
 
         if State.lidar_to_image:
@@ -100,7 +100,7 @@ class State:
             data = [round(x, State.lidar_float_cut) for x in data]
 
         if State.add_velocity:
-            return (data, acelleration_value)
+            return (data, acceleration_value)
         else:
             return data
 
