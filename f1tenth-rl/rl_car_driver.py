@@ -16,7 +16,7 @@ from car_env import CarEnv
 from state import State
 from logger import AsyncLogger
 from car.gamepad import Gamepad
-from car.monitor import Monitor
+from monitor.monitor_sender import Monitor
 
 #################################
 # parameters

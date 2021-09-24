@@ -57,8 +57,6 @@ class Sensors():
     def get_car_angular_acceleration(self):
         return self.odometry.twist.twist.angular
 
-    def get_car_imu(self):
-        return self.imu
 
     def back_obstacle(self):
         if not self.is_simulator:
