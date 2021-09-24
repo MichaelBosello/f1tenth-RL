@@ -68,9 +68,6 @@ class Drive():
     
     def backward(self):
         self.send_drive_command(-self.max_speed/self.backward_speed_reduction, 0)
-
-    def brake(self):
-        self.send_drive_command(-self.max_speed, 0)
     
     def stop(self):
         self.send_drive_command(0, 0)

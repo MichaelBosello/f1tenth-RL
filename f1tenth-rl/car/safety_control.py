@@ -38,11 +38,11 @@ class SafetyControl():
     def lidar_callback(self, lidar_data):
         if self.safety:
             if self.use_ttc:
-                acceleration = self.sensors.get_car_linear_acceleration()
-                if acceleration > 0:
+                acelleration = self.sensors.get_car_linear_acelleration()
+                if acelleration > 0:
                     for i in range(len(lidar_data.ranges)):
                         angle = lidar_data.angle_min + i * lidar_data.angle_increment
-                        proj_velocity = acceleration * math.cos(angle)
+                        proj_velocity = acelleration * math.cos(angle)
                         if proj_velocity != 0:
                             ttc = lidar_data.ranges[i] / proj_velocity
                             if ttc < self.ttc_treshold and ttc >= 0:
@@ -56,8 +56,6 @@ class SafetyControl():
                 self.emergency_brake = True
 
             if self.emergency_brake:
-                while self.emergency_brake and self.sensors.get_car_linear_acceleration() > 0:
-                    self.drive.brake()
                 self.drive.stop()
 
     def unlock_brake(self):

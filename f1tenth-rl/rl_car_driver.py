@@ -16,7 +16,6 @@ from car_env import CarEnv
 from state import State
 from logger import AsyncLogger
 from car.gamepad import Gamepad
-from car.monitor import Monitor
 
 #################################
 # parameters
@@ -70,7 +69,6 @@ parser.add_argument("--save-model-freq", type=int, default=3000, help="save the 
 parser.add_argument("--logging", type=bool, default=True, help="enable tensorboard logging")
 parser.add_argument("--env-logging", type=bool, default=False, help="log state, action, reward of every step to build a dataset for later use")
 parser.add_argument("--gamepad", type=bool, default=False, help="log state, action, reward of every step to build a dataset for later use")
-parser.add_argument("--show-monitor", type=bool, default=False, help="show a GUI with car status information")
 args = parser.parse_args()
 
 print('Arguments: ', (args))
@@ -99,8 +97,6 @@ dqn = dqn.DeepQNetwork(environment.get_num_actions(), environment.get_state_size
                         replay_memory, base_output_dir, tensorboard_dir, args)
 if args.gamepad is True:
     gamepad = Gamepad()
-if args.show_monitor is True:
-    monitor = Monitor(environment.sensors)
 
 train_epsilon = args.epsilon #don't want to reset epsilon between epoch
 start_time = datetime.datetime.now()
@@ -188,8 +184,7 @@ def run_epoch(min_epoch_steps, eval_with_epsilon=None):
                     action = random.randrange(environment.get_num_actions())
                 else:
                     action = dqn.inference(state.get_data())
-            if args.show_monitor:
-                monitor.update(action, (args.gamepad is True and not gamepad.is_autonomous_mode()))
+
 
             # we can't skip frames as in a game
             # we need to wait the evolution of the environment, but we don't want to waste GPU time
