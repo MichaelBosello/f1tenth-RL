@@ -1,6 +1,7 @@
 import rospy
 from sensor_msgs.msg import LaserScan
 from nav_msgs.msg import Odometry
+from sensor_msgs.msg import Imu
 
 import time
 import math
@@ -20,6 +21,7 @@ class Sensors():
             odom_topic = "/odom"
         self.lidar_subscriber = rospy.Subscriber("scan", LaserScan, self.lidar_callback)
         self.odom_subscriber = rospy.Subscriber(odom_topic, Odometry, self.odometry_callback)
+        self.imu_subscriber = rospy.Subscriber("imu", Imu, self.imu_callback)
 
         if not is_simulator:
             if use_back_sensors:
@@ -39,18 +41,24 @@ class Sensors():
     def odometry_callback(self, odometry):
         self.odometry = odometry
 
+    def imu_callback(self, imu):
+        self.imu = imu
+
     def get_lidar_ranges(self):
         if not self.is_simulator:
             return self.lidar_data.ranges[:-1]
         else:
             return self.lidar_data.ranges
 
-    def get_car_linear_acelleration(self):
+    def get_car_linear_acceleration(self):
         if self.odometry is None or (self.odometry.twist.twist.linear.x == 0 and self.odometry.twist.twist.linear.x == 0):
             return 0
         return math.sqrt(self.odometry.twist.twist.linear.x ** 2 + self.odometry.twist.twist.linear.y ** 2)
-    def get_car_angular_acelleration(self):
+    def get_car_angular_acceleration(self):
         return self.odometry.twist.twist.angular
+
+    def get_car_imu(self):
+        return self.imu
 
     def back_obstacle(self):
         if not self.is_simulator:
@@ -77,7 +85,7 @@ if __name__ == '__main__':
         print("######################################")
         print(sensor.lidar_data)
         print(sensor.odometry)
-        print(sensor.get_car_linear_acelleration())
+        print(sensor.get_car_linear_acceleration())
         if not args.simulator:
             print(sensor.back_obstacle())
         time.sleep(5)
