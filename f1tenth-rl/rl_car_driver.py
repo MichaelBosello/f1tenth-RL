@@ -40,7 +40,7 @@ parser.add_argument("--target-model-update-freq", type=int, default=500, help="h
 parser.add_argument("--model", help="tensorflow model directory to initialize from (e.g. run/model)")
 parser.add_argument("--history-length", type=int, default=2, help="(>=1) length of history used in the dqn. An action is performed [history-length] time")
 parser.add_argument("--repeat-action", type=int, default=2, help="(>=0) actions are repeated [repeat-action] times. Unlike history-length, it doesn't increase the network size")
-parser.add_argument("--gpu-time", type=int, default=0.011, help="""waiting time (seconds) between actions when agent is not training (observation steps/evaluation).
+parser.add_argument("--gpu-time", type=float, default=0.011, help="""waiting time (seconds) between actions when agent is not training (observation steps/evaluation).
                                 It should be the amount of time used by your CPU/GPU to perform a training sweep. It is needed to have the same states and rewards as
                                 training takes time and the environment evolves indipendently""")
 parser.add_argument("--slowdown-cycle", type=bool, default=True, help="add a sleep equal to [gpu-time] in the training cycle")
@@ -178,6 +178,8 @@ def run_epoch(min_epoch_steps, eval_with_epsilon=None):
             if args.gamepad is True and not gamepad.is_autonomous_mode():
                 action = gamepad.get_action()
                 while action is None:
+                    if args.show_monitor:
+                        monitor.update(-1, False)
                     environment.control.stop()
                     action = gamepad.get_action()
                     time.sleep(0.5)
@@ -189,7 +191,7 @@ def run_epoch(min_epoch_steps, eval_with_epsilon=None):
                 else:
                     action = dqn.inference(state.get_data())
             if args.show_monitor:
-                monitor.update(action, (args.gamepad is True and not gamepad.is_autonomous_mode()))
+                monitor.update(action, (args.gamepad is False or gamepad.is_autonomous_mode()))
 
             # we can't skip frames as in a game
             # we need to wait the evolution of the environment, but we don't want to waste GPU time
