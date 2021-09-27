@@ -50,12 +50,20 @@ class Sensors():
         else:
             return self.lidar_data.ranges
 
-    def get_car_linear_acceleration(self):
+    def get_car_linear_velocity(self):
         if self.odometry is None or (self.odometry.twist.twist.linear.x == 0 and self.odometry.twist.twist.linear.x == 0):
             return 0
         return math.sqrt(self.odometry.twist.twist.linear.x ** 2 + self.odometry.twist.twist.linear.y ** 2)
+
     def get_car_angular_acceleration(self):
         return self.odometry.twist.twist.angular
+
+    def get_car_linear_acceleration(self):
+        return math.sqrt(self.imu.linear_acceleration.x ** 2 + self.imu.linear_acceleration.y ** 2)
+
+    def get_car_orientation(self):
+        q = self.imu.orientation
+        return math.atan2(2.0*(q.w*q.z + q.x*q.y), q.w**2 + q.x**2 - q.y**2 - q.z**2)
 
 
     def back_obstacle(self):
@@ -83,7 +91,7 @@ if __name__ == '__main__':
         print("######################################")
         print(sensor.lidar_data)
         print(sensor.odometry)
-        print(sensor.get_car_linear_acceleration())
+        print(sensor.get_car_linear_velocity())
         if not args.simulator:
             print(sensor.back_obstacle())
         time.sleep(5)

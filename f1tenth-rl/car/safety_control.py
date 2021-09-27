@@ -38,7 +38,7 @@ class SafetyControl():
     def lidar_callback(self, lidar_data):
         if self.safety:
             if self.use_ttc:
-                acceleration = self.sensors.get_car_linear_acceleration()
+                acceleration = self.sensors.get_car_linear_velocity()
                 if acceleration > 0:
                     for i in range(len(lidar_data.ranges)):
                         angle = lidar_data.angle_min + i * lidar_data.angle_increment

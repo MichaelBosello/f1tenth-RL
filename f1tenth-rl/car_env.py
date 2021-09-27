@@ -105,7 +105,7 @@ class CarEnv:
         self.state = self.state.state_by_adding_data(self._get_car_state())
 
         if USE_VELOCITY_AS_REWARD:
-            reward = self.sensors.get_car_linear_acceleration() * VELOCITY_NORMALIZATION * REWARD_SCALING
+            reward = self.sensors.get_car_linear_velocity() * VELOCITY_NORMALIZATION * REWARD_SCALING
 
         if ADD_LIDAR_DISTANCE_REWARD:
             reward += min(list(self.sensors.get_lidar_ranges())) * LIDAR_DISTANCE_WEIGHT
@@ -127,7 +127,7 @@ class CarEnv:
     def _get_car_state(self):
         current_data = list(self.sensors.get_lidar_ranges())
         if self.add_velocity:
-            current_data.append(self.sensors.get_car_linear_acceleration())
+            current_data.append(self.sensors.get_car_linear_velocity())
         return current_data
 
 
