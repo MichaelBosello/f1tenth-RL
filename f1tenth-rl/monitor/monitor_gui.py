@@ -8,7 +8,7 @@ import time
 
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
-from PyQt5.QtCore import Qt, QCoreApplication
+from PyQt5.QtCore import Qt, QCoreApplication, QTimer
 
 import rospy
 from sensor_msgs.msg import LaserScan
@@ -18,8 +18,8 @@ from rviz import bindings as rviz
 from gui_components.AnalogGaugeWidgetPyQt.analoggaugewidget import AnalogGaugeWidget
 from gui_components.qt_compass import CompassWidget
 
-UPDATE_FREQ = 1/60
-UDP_IP = "192.168.1.23"
+UPDATE_FREQ = 1000 / 60
+UDP_IP = "192.168.1.28"
 UDP_PORT = 5005
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -68,7 +68,7 @@ class MainWindow(QMainWindow):
         speed_gauge.setFixedSize(300, 300)
 
         acc_gauge = AnalogGaugeWidget()
-        acc_gauge.set_MaxValue(15)
+        acc_gauge.set_MaxValue(30)
         acc_gauge.set_enable_ScaleText(False)
         acc_gauge.set_gauge_color_inner_radius_factor(800)
         acc_gauge.set_enable_CenterPoint(False)
@@ -143,6 +143,11 @@ class MainWindow(QMainWindow):
 class MonitorDataHandler():
     def __init__(self, window):
         self.window = window
+        self.speed = 0
+        self.acc = 0
+        self.orientation = 0
+        self.action = -1
+        self.autonomous_mode = True
         rospy.init_node('monitor')
         self.laser_publisher = rospy.Publisher("/scan", LaserScan, queue_size=0)
         process = Thread(target=self.data_receiver)
@@ -150,7 +155,6 @@ class MonitorDataHandler():
         process.start()
 
     def data_receiver(self):
-        latest_update = time.time()
         while True:
             data_msg, addr = sock.recvfrom(32768)
             data = pickle.loads(data_msg)
@@ -163,37 +167,42 @@ class MonitorDataHandler():
                 else:
                     raise e
 
-            if time.time() - latest_update > UPDATE_FREQ:
-                latest_update = time.time()
-                speed = abs(data["spd"]) * 3.6 * 1.6
-                if speed > self.window.speed_gauge.get_value_max():
-                    print("Speed out of range: {}".format(speed))
-                else:
-                    window.speed_gauge.update_value(speed)
-                if data["acc"] > self.window.acc_gauge.get_value_max():
-                    print("Acceleration out of range: {}".format(data["acc"]))
-                else:
-                    window.acc_gauge.update_value(data["acc"])
-                orientation = data["orn"] * 180 / math.pi
-                window.compass.setAngle(orientation)
+            speed = abs(data["spd"]) * 3.6 * 1.6
+            if speed > self.window.speed_gauge.get_value_max():
+                print("Speed out of range: {}".format(speed))
+            else:
+                self.speed = speed
+            if data["acc"] > self.window.acc_gauge.get_value_max():
+                print("Acceleration out of range: {}".format(data["acc"]))
+            else:
+                self.acc = data["acc"]
+            self.orientation = data["orn"] * 180 / math.pi
+            
+            self.action = data["act"]
+            self.autonomous_mode = data["auto"]
 
-                if data["act"] == -1:
-                    window.action_image_label.setPixmap(window.no_action_pixmap)
-                elif data["act"] == 0:
-                    window.action_image_label.setPixmap(window.fw_pixmap)
-                elif data["act"] == 1:
-                    window.action_image_label.setPixmap(window.rx_pixmap)
-                elif data["act"] == 2:
-                    window.action_image_label.setPixmap(window.lx_pixmap)
-                elif data["act"] == 3:
-                    window.action_image_label.setPixmap(window.slow_pixmap)
 
-                if data["auto"]:
-                    window.auto_label.setText('Autonomous Mode: <font color="green"><b>On</b></font>')
-                else:
-                    window.auto_label.setText('Autonomous Mode: <font color="red"><b>Off</b></font>')
+    def update_gui(self):
+        window.speed_gauge.update_value(self.speed)
+        window.acc_gauge.update_value(self.acc)
+        window.compass.setAngle(self.orientation)
+        if self.action == -1:
+            window.action_image_label.setPixmap(window.no_action_pixmap)
+        elif self.action == 0:
+            window.action_image_label.setPixmap(window.fw_pixmap)
+        elif self.action == 1:
+            window.action_image_label.setPixmap(window.rx_pixmap)
+        elif self.action == 2:
+            window.action_image_label.setPixmap(window.lx_pixmap)
+        elif self.action == 3:
+            window.action_image_label.setPixmap(window.slow_pixmap)
 
-                QCoreApplication.processEvents()
+        if self.autonomous_mode:
+            window.auto_label.setText('Autonomous Mode: <font color="green"><b>On</b></font>')
+        else:
+            window.auto_label.setText('Autonomous Mode: <font color="red"><b>Off</b></font>')
+
+        QCoreApplication.processEvents()
 
 if __name__ == '__main__':
     app = QApplication([])
@@ -202,6 +211,11 @@ if __name__ == '__main__':
     window.showFullScreen()
     window.show()
 
-    MonitorDataHandler(window)
+    handler = MonitorDataHandler(window)
     
+    timer_gui = QTimer()
+    timer_gui.timeout.connect(handler.update_gui)
+    timer_gui.setInterval(UPDATE_FREQ)
+    timer_gui.start()
+
     app.exec_()
