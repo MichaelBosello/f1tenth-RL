@@ -324,3 +324,4 @@ while not stop:
     print('Average epoch training score: %d' % (avg_score))
     avg_score = run_epoch(args.eval_epoch_steps, eval_with_epsilon=0) # eval
     print('Average epoch eval score: %d' % (avg_score))
+environment.destroy()

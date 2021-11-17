@@ -76,6 +76,10 @@ class CarEnv:
         return current_data
 
 
+    def destroy(self):
+        self.env.destroy()
+
+
     def get_state_size(self):
         return len(self.state.get_data())
 
