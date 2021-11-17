@@ -59,8 +59,8 @@ class CarlaEnv:
         self.imu = self.world.spawn_actor(imu_bp,imu_transform,attach_to=self.vehicle)
 
         self.sensors = Sensors(self.vehicle, self.world, DELTA, MAIN_SENSOR)
-        self.drive = Drive(self.vehicle, self.world, self.sensors)
-        self.safety_control = SafetyControl(self.drive, self.sensors)
+        self.control = Drive(self.vehicle, self.world, self.sensors)
+        self.safety_control = SafetyControl(self.control, self.sensors)
 
         process = Thread(target=self._update_server)
         process.daemon = True
@@ -109,17 +109,17 @@ if __name__ == '__main__':
             print("Write command")
             cmd = input()
             if cmd == "w":
-                env.drive.forward()
+                env.control.forward()
             if cmd == "a":
-                env.drive.left()
+                env.control.left()
             if cmd == "d":
-                env.drive.right()
+                env.control.right()
             if cmd == "s":
-                env.drive.backward()
+                env.control.backward()
             if cmd == " ":
-                env.drive.stop()
+                env.control.stop()
             if cmd == "r":
-                env.drive.new_position()
+                env.control.new_position()
             if cmd == "u":
                 env.safety_control.unlock_brake()
             if cmd == "q":
