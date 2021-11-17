@@ -25,6 +25,7 @@ except:
 DELTA = 0.05
 NO_RENDERING = False
 SHOW_LIDAR = True
+SLEEP_RT = True
 
 MAIN_SENSOR = '3d-lidar'
 
@@ -34,7 +35,8 @@ class CarlaEnv:
     def __init__(self):
         self.exit_flag = False
         self.client = carla.Client('localhost', 2000)
-        self.client.set_timeout(2.0)
+        self.client.set_timeout(5.0)
+        self.client.load_world('Town03')
         self.world = self.client.get_world()
         self.original_settings = self.world.get_settings()
         self.settings = self.world.get_settings()
@@ -74,7 +76,8 @@ class CarlaEnv:
             carla.Rotation(transform.rotation.pitch, transform.rotation.yaw, transform.rotation.roll))
             self.world.get_spectator().set_transform(spectator_transform)
             self.world.tick()
-            time.sleep(DELTA)
+            if SLEEP_RT:
+                time.sleep(DELTA)
 
     def update_view(self):
         '''
