@@ -13,17 +13,22 @@ except ImportError:
 # based on Velodyne VLP-16
 LIDAR_CHANNELS = 16
 LIDAR_RANGE = 100
-LIDAR_POINTS_PER_SECONDS = 300000
+LIDAR_POINTS_PER_SCAN = 300000
 LIDAR_UPPER_FOW = 15
 LIDAR_LOWER_FOW = -15
 LIDAR_HORIZONTAL_FOV = 360
+LIDAR_LOCATION_X = 0.5
+LIDAR_LOCATION_Z = 1.8
 
 LIDAR_2D_CHANNELS = 1
-LIDAR_2D_RANGE = 30
-LIDAR_2D_POINTS_PER_SECONDS = 1080
+LIDAR_2D_RANGE = 50
+MAX_LIDAR_RANGE = 184460000000000000
+LIDAR_2D_POINTS_PER_SCAN = 1080
 LIDAR_2D_UPPER_FOW = 0
 LIDAR_2D_LOWER_FOW = 0
 LIDAR_2D_HORIZONTAL_FOV = 270
+LIDAR_2D_LOCATION_X = 2
+LIDAR_2D_LOCATION_Z = 0.15
 
 # the 'a' coefficient that measures the LIDAR instensity loss per meter in the eq: e^-a*d
 # it depends on the lidar wavelenght and meteo conditions. It should affects the LIDAR performance during rain etc.
@@ -41,36 +46,48 @@ class Sensors():
     def __init__(self, vehicle, world, world_delta, main_sensor='3d-lidar'):
         self.vehicle = vehicle
         self.world = world
+        self.world_delta = world_delta
+        self.main_sensor = main_sensor
         self.custom_lidar_callbacks = []
-        self.lidar_data = None
+        self._lidar_data = None
 
         self.vis = None
-        self.lidar_range = LIDAR_RANGE
-        self.lidar_rotation_frequency = 1/world_delta if world_delta>0 else 0
+        self.lidar_rotation_frequency = 1/world_delta if world_delta>0 else 1
+
 
         lidar_bp = self.world.get_blueprint_library().find('sensor.lidar.ray_cast')
         if main_sensor == '3d-lidar':
+            self.lidar_range = LIDAR_RANGE
+            self.lidar_points_per_seconds = LIDAR_POINTS_PER_SCAN * self.lidar_rotation_frequency
             lidar_bp.set_attribute('channels',str(LIDAR_CHANNELS))
             lidar_bp.set_attribute('range',str(LIDAR_RANGE))
-            lidar_bp.set_attribute('points_per_second',str(LIDAR_POINTS_PER_SECONDS))
+            lidar_bp.set_attribute('points_per_second',str(self.lidar_points_per_seconds))
             lidar_bp.set_attribute('rotation_frequency',str(self.lidar_rotation_frequency))
             lidar_bp.set_attribute('upper_fov',str(LIDAR_UPPER_FOW))
             lidar_bp.set_attribute('lower_fov',str(LIDAR_LOWER_FOW))
             lidar_bp.set_attribute('horizontal_fov',str(LIDAR_HORIZONTAL_FOV))
+            x = LIDAR_LOCATION_X
+            z = LIDAR_LOCATION_Z
         elif main_sensor == '2d-lidar':
+            self.lidar_range = LIDAR_2D_RANGE
+            self.lidar_points_per_seconds = LIDAR_2D_POINTS_PER_SCAN * self.lidar_rotation_frequency
             lidar_bp.set_attribute('channels',str(LIDAR_2D_CHANNELS))
-            lidar_bp.set_attribute('range',str(LIDAR_2D_RANGE))
-            lidar_bp.set_attribute('points_per_second',str(LIDAR_2D_POINTS_PER_SECONDS))
+            # When the Lidar point is too far (out of range), the sensor will return NOTHING instead of a default value on that direction. see https://github.com/carla-simulator/carla/issues/2262
+            # we will take all the possible points and exclude the out-of-range later
+            lidar_bp.set_attribute('range',str(MAX_LIDAR_RANGE))
+            lidar_bp.set_attribute('points_per_second',str(self.lidar_points_per_seconds))
             lidar_bp.set_attribute('rotation_frequency',str(self.lidar_rotation_frequency))
             lidar_bp.set_attribute('upper_fov',str(LIDAR_2D_UPPER_FOW))
             lidar_bp.set_attribute('lower_fov',str(LIDAR_2D_LOWER_FOW))
             lidar_bp.set_attribute('horizontal_fov',str(LIDAR_2D_HORIZONTAL_FOV))
+            x = LIDAR_2D_LOCATION_X
+            z = LIDAR_2D_LOCATION_Z
         lidar_bp.set_attribute('atmosphere_attenuation_rate',str(LIDAR_ATTENUATION_RATE))
         lidar_bp.set_attribute('dropoff_general_rate',str(LIDAR_DROPOFF_RATE))
         lidar_bp.set_attribute('dropoff_intensity_limit',str(LIDAR_DROPOFF_INTENSITY_LIMIT))
         lidar_bp.set_attribute('dropoff_zero_intensity',str(LIDAR_DROPOFF_ZERO_INTENSITY))
         lidar_bp.set_attribute('noise_stddev',str(LIDAR_NOISE_STD))
-        lidar_location = carla.Location(0.5,0,1.8)
+        lidar_location = carla.Location(x,0,z)
         lidar_rotation = carla.Rotation(0,0,0)
         lidar_transform = carla.Transform(lidar_location,lidar_rotation)
         self.lidar = self.world.spawn_actor(lidar_bp,lidar_transform,attach_to=self.vehicle)
@@ -81,16 +98,34 @@ class Sensors():
         self.custom_lidar_callbacks.append(callback)
 
     def lidar_callback(self, data):
-        self.lidar_data = np.frombuffer(data.raw_data, dtype=np.dtype('f4'))
+        data = np.frombuffer(data.raw_data, dtype=np.dtype('f4'))
+        self._lidar_data = np.reshape(data, (int(data.shape[0] / 4), 4))
+        if self.main_sensor == '2d-lidar':
+            max_intensity = math.e**(-LIDAR_ATTENUATION_RATE * self.lidar_range)
+            self._lidar_data = self._remove_out_of_range(self._lidar_data, self.lidar_range, max_intensity)
+            self._lidar_data = self._fill_scan(self._lidar_data, LIDAR_2D_POINTS_PER_SCAN, max_intensity)
+
         for callback in self.custom_lidar_callbacks:
-            callback(self.lidar_data)
+            callback(self.get_lidar_data())
 
     def get_lidar_data(self):
-        return self.lidar_data
+        if self.main_sensor == '3d-lidar':
+            return self._lidar_data
+        if self.main_sensor == '2d-lidar':
+            return self.lidar_distances(self._lidar_data)
 
     def get_car_linear_velocity(self):
         v = self.vehicle.get_velocity()
         return math.sqrt(v.x**2 + v.y**2 + v.z**2)
+
+    def lidar_distances(self, lidar_data):
+        distances = []
+        for point in lidar_data:
+            if point[3] > 0:
+                distances.append(-math.log(point[3])/LIDAR_ATTENUATION_RATE)
+            else:
+                distances.append(0)
+        return distances
 
     def destroy(self):
         self.lidar.destroy()
@@ -120,8 +155,7 @@ class Sensors():
             self.first_run = True
 
     def update_lidar_window(self):
-        data = self.lidar_data.copy()
-        data = np.reshape(data, (int(data.shape[0] / 4), 4))
+        data = self._lidar_data.copy()
 
         if open3d_installed:
             if self.vis is None:
@@ -153,3 +187,22 @@ class Sensors():
             self.vis.update_renderer()
         else:
             print("lidar data {}".format(data))
+
+    def _remove_out_of_range(self, lidar_data, range, default_value):
+        filtered = []
+        for point in lidar_data:
+            distance = -math.log(point[3])/LIDAR_ATTENUATION_RATE if point[3] > 0 else 0
+            if distance <= range:
+                filtered.append(point)
+            else:
+                filtered.append(np.array([0,0,0,default_value]))
+        return np.array(filtered)
+
+    def _fill_scan(self, lidar_data, points_per_scan, default_value):
+        n_missing = points_per_scan - lidar_data.shape[0]
+        if n_missing > 0:
+            left_pad = int(n_missing/2)
+            right_pad = n_missing - left_pad
+            lidar_data = np.pad(lidar_data, ((left_pad, right_pad), (0,0)), mode='constant', constant_values=0)
+            lidar_data[:,3] = np.where(lidar_data[:,3] > 0, lidar_data[:,3], default_value)
+        return lidar_data
