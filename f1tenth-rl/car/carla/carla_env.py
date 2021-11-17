@@ -18,9 +18,11 @@ import carla
 try:
     from car.carla.carla_car_control import Drive
     from car.carla.carla_sensors import Sensors
+    from car.carla.carla_safety_control import SafetyControl
 except:
     from carla_car_control import Drive
     from carla_sensors import Sensors
+    from carla_safety_control import SafetyControl
 
 DELTA = 0.05
 NO_RENDERING = False
@@ -58,6 +60,7 @@ class CarlaEnv:
 
         self.sensors = Sensors(self.vehicle, self.world, DELTA, MAIN_SENSOR)
         self.drive = Drive(self.vehicle, self.world, self.sensors)
+        self.safety_control = SafetyControl(self.drive, self.sensors)
 
         process = Thread(target=self._update_server)
         process.daemon = True
@@ -107,16 +110,18 @@ if __name__ == '__main__':
             cmd = input()
             if cmd == "w":
                 env.drive.forward()
-            if cmd == "s":
-                env.drive.backward()
             if cmd == "a":
                 env.drive.left()
             if cmd == "d":
                 env.drive.right()
+            if cmd == "s":
+                env.drive.backward()
             if cmd == " ":
                 env.drive.stop()
             if cmd == "r":
                 env.drive.new_position()
+            if cmd == "u":
+                env.safety_control.unlock_brake()
             if cmd == "q":
                 exit_flag = True
                 break
