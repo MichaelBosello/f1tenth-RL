@@ -29,7 +29,7 @@ NO_RENDERING = False
 SHOW_LIDAR = True
 SLEEP_RT = True
 
-MAIN_SENSOR = '3d-lidar'
+MAIN_SENSOR = '2d-lidar'
 
 
 class CarlaEnv:
