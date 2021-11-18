@@ -128,7 +128,7 @@ def stop_handler():
       stop = True
     if user_input == 'r':
       print("Resetting simulator position...")
-      environment.control.reset_simulator()
+      environment.reset_game()#control.reset_simulator()
     if user_input == 'pause':
       print("pause...")
       pause = True
