@@ -28,7 +28,7 @@ LIDAR_2D_UPPER_FOW = 0
 LIDAR_2D_LOWER_FOW = 0
 LIDAR_2D_HORIZONTAL_FOV = 270
 LIDAR_2D_LOCATION_X = 2
-LIDAR_2D_LOCATION_Z = 0.15
+LIDAR_2D_LOCATION_Z = 0.1
 
 # the 'a' coefficient that measures the LIDAR instensity loss per meter in the eq: e^-a*d
 # it depends on the lidar wavelenght and meteo conditions. It should affects the LIDAR performance during rain etc.
