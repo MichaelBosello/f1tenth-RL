@@ -44,13 +44,13 @@ class CarEnv:
         reward = 0
         if action == 0:
             self.control.forward()
-            reward = 0.08
+            reward = 0.01
         elif action == 1:
             self.control.right()
-            reward = 0.02
+            reward = 0
         elif action == 2:
             self.control.left()
-            reward = 0.02
+            reward = 0
         else:
             raise ValueError('`action` should be between 0 and ' + str(len(self.action_set)-1))
 
