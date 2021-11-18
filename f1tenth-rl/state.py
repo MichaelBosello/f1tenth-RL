@@ -93,7 +93,8 @@ class State:
         if State.lidar_reduction_method == 'min':
             data = [min(data[i:i + State.reduce_by]) for i in range(0, len(data), State.reduce_by)]
 
-        data = data[State.cut_by:-State.cut_by]
+        if State.cut_by > 0:
+            data = data[State.cut_by:-State.cut_by]
         if State.max_distance_norm > 1:
             data = [x / State.max_distance_norm for x in data]
         if State.lidar_float_cut > -1:
