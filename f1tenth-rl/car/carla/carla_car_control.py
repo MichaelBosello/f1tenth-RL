@@ -25,7 +25,7 @@ class Drive():
     def send_drive_command(self, speed, steering_angle, brake=0, reverse=False):
         self.vehicle.apply_control(carla.VehicleControl(speed, steering_angle, brake=brake, reverse=reverse))
 
-    def new_position(self):
+    def reset_position(self):
         self.stop()
         transform = random.choice(self.world.get_map().get_spawn_points())
         self.vehicle.set_transform(transform)

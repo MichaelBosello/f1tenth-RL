@@ -131,7 +131,7 @@ def stop_handler():
       stop = True
     if user_input == 'r':
       print("Resetting simulator position...")
-      environment.reset_game()#control.reset_simulator()
+      environment.control.reset_position()
     if user_input == 'pause':
       print("pause...")
       pause = True
@@ -265,7 +265,7 @@ def run_epoch(min_epoch_steps, eval_with_epsilon=None):
                     stuck_count = 0
                 if stuck_count > 2:
                     print("Car stuck, resetting simulator position...")
-                    environment.control.reset_simulator()
+                    environment.control.reset_position()
                     stuck_count = 0
 
         if save_net:
