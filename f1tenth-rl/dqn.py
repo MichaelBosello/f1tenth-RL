@@ -7,6 +7,16 @@ from models import *
 
 class DeepQNetwork:
     def __init__(self, num_actions, state_size, replay_buffer, base_dir, tensorboard_dir, args):
+
+        gpus = tf.config.list_physical_devices('GPU')
+        if len(gpus) == 0:
+            print("no GPU found, using CPU")
+            self.tf_device = tf.config.list_physical_devices()[0]
+        elif args.gpu_index < 0 or args.gpu_index >= len(gpus):
+            print("invalid GPU index, using GPU at index 0")
+            self.tf_device = gpus[0]
+        else:
+            self.tf_device = gpus[args.gpu_index]
         
         self.num_actions = num_actions
         self.state_size = state_size
@@ -70,42 +80,43 @@ class DeepQNetwork:
             state = state.reshape((-1, self.state_size[0], self.state_size[1] * self.history_length))
         else:
             state = state.reshape((-1, self.state_size, self.history_length))
-
-        return np.asarray(self.behavior_predict(state)).argmax(axis=1)
+        with self.tf_device:
+            return np.asarray(self.behavior_predict(state)).argmax(axis=1)
 
     def train(self, batch, step_number):
-        if self.add_velocity:
-            old_states_lidar = np.asarray([sample.old_state.get_data()[0] for sample in batch])
-            old_states_acc = np.asarray([sample.old_state.get_data()[1] for sample in batch])
-            new_states_lidar = np.asarray([sample.new_state.get_data()[0] for sample in batch])
-            new_states_acc = np.asarray([sample.new_state.get_data()[1] for sample in batch])
-            actions = np.asarray([sample.action for sample in batch])
-            rewards = np.asarray([sample.reward for sample in batch])
-            is_terminal = np.asarray([sample.terminal for sample in batch])
+        with self.tf_device:
+            if self.add_velocity:
+                old_states_lidar = np.asarray([sample.old_state.get_data()[0] for sample in batch])
+                old_states_acc = np.asarray([sample.old_state.get_data()[1] for sample in batch])
+                new_states_lidar = np.asarray([sample.new_state.get_data()[0] for sample in batch])
+                new_states_acc = np.asarray([sample.new_state.get_data()[1] for sample in batch])
+                actions = np.asarray([sample.action for sample in batch])
+                rewards = np.asarray([sample.reward for sample in batch])
+                is_terminal = np.asarray([sample.terminal for sample in batch])
 
-            predicted = self.target_predict({'lidar': new_states_lidar, 'acc': new_states_acc})
-            q_new_state = np.max(predicted, axis=1)
-            target_q = rewards + (self.gamma*q_new_state * (1-is_terminal))
-            one_hot_actions = tf.keras.utils.to_categorical(actions, self.num_actions)# using tf.one_hot causes strange errors
+                predicted = self.target_predict({'lidar': new_states_lidar, 'acc': new_states_acc})
+                q_new_state = np.max(predicted, axis=1)
+                target_q = rewards + (self.gamma*q_new_state * (1-is_terminal))
+                one_hot_actions = tf.keras.utils.to_categorical(actions, self.num_actions)# using tf.one_hot causes strange errors
 
-            loss = self.gradient_train({'lidar': old_states_lidar, 'acc': old_states_acc}, target_q, one_hot_actions)
-        else:
-            old_states = np.asarray([sample.old_state.get_data() for sample in batch])
-            new_states = np.asarray([sample.new_state.get_data() for sample in batch])
-            actions = np.asarray([sample.action for sample in batch])
-            rewards = np.asarray([sample.reward for sample in batch])
-            is_terminal = np.asarray([sample.terminal for sample in batch])
+                loss = self.gradient_train({'lidar': old_states_lidar, 'acc': old_states_acc}, target_q, one_hot_actions)
+            else:
+                old_states = np.asarray([sample.old_state.get_data() for sample in batch])
+                new_states = np.asarray([sample.new_state.get_data() for sample in batch])
+                actions = np.asarray([sample.action for sample in batch])
+                rewards = np.asarray([sample.reward for sample in batch])
+                is_terminal = np.asarray([sample.terminal for sample in batch])
 
-            q_new_state = np.max(self.target_predict(new_states), axis=1)
-            target_q = rewards + (self.gamma*q_new_state * (1-is_terminal))
-            one_hot_actions = tf.keras.utils.to_categorical(actions, self.num_actions)# using tf.one_hot causes strange errors
+                q_new_state = np.max(self.target_predict(new_states), axis=1)
+                target_q = rewards + (self.gamma*q_new_state * (1-is_terminal))
+                one_hot_actions = tf.keras.utils.to_categorical(actions, self.num_actions)# using tf.one_hot causes strange errors
 
-            loss = self.gradient_train(old_states, target_q, one_hot_actions)
+                loss = self.gradient_train(old_states, target_q, one_hot_actions)
 
-        if step_number % self.target_model_update_freq == 0:
-            self.behavior_net.set_weights(self.target_net.get_weights())
+            if step_number % self.target_model_update_freq == 0:
+                self.behavior_net.set_weights(self.target_net.get_weights())
 
-        return loss
+            return loss
 
     @tf.function
     def target_predict(self, state):

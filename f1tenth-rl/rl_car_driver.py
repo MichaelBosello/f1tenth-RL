@@ -27,6 +27,7 @@ parser = argparse.ArgumentParser()
 # real car or simulator
 parser.add_argument("--simulator", action='store_true', help="to set the use of the simulator")
 parser.add_argument("--use_back_sensors", action='store_true', help="to set the use of the simulator")
+parser.add_argument("--gpu-index", type=int, default=1, help="the index of the gpu used by tensorflow. CPU is used if no gpu is found")
 # agent parameters
 parser.add_argument("--learning-rate", type=float, default=0.00042, help="learning rate of the NN")
 parser.add_argument("--gamma", type=float, default=0.98, help="""gamma [0, 1] is the discount factor. It determines the importance of future rewards.
