@@ -6,20 +6,26 @@ class SafetyControl():
         self.emergency_brake = False
         self.drive = drive
         self.sensors = sensors
-        self.sensors.add_lidar_callback(self.lidar_callback)
+        if self.sensors.main_sensor == '2d-lidar':
+            self.sensors.add_lidar_callback(self.lidar_callback)
+        self.sensors.add_collision_callback(self.stop_event_callback)
+        self.sensors.add_lane_invasion_callback(self.stop_event_callback)
         self.safety = True
 
     def lidar_callback(self, lidar_data):
-        if self.sensors.main_sensor == '2d-lidar':
-            ranges = lidar_data[FOV_MARGIN:-FOV_MARGIN]
-        if self.sensors.main_sensor == '3d-lidar':
-            ranges = self.sensors.lidar_distances(lidar_data)
+        ranges = lidar_data[FOV_MARGIN:-FOV_MARGIN]
         if self.safety:
             if min(ranges) < EUCLIDEAN_THRESHOLD:
                 self.emergency_brake = True
 
             if self.emergency_brake:
                 self.drive.stop()
+
+    def stop_event_callback(self, _):
+        if self.safety:
+            self.emergency_brake = True
+            self.drive.stop()
+
 
     def unlock_brake(self):
         self.emergency_brake = False

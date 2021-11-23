@@ -49,6 +49,8 @@ class Sensors():
         self.world_delta = world_delta
         self.main_sensor = main_sensor
         self.custom_lidar_callbacks = []
+        self.collision_callbacks = []
+        self.lane_callbacks = []
         self._lidar_data = None
 
         self.vis = None
@@ -96,6 +98,29 @@ class Sensors():
 
         self.max_intensity = math.e**(-LIDAR_ATTENUATION_RATE * self.lidar_range)
         self.lidar.listen(lambda raw_data: self._lidar_callback(raw_data))
+
+        self.collision_sensor = self.world.spawn_actor(self.world.get_blueprint_library().find('sensor.other.collision'),
+                                        carla.Transform(), attach_to=self.vehicle)
+        self.collision_sensor.listen(lambda event: self._collision_callback(event))
+
+        self.lane_sensor = self.world.spawn_actor(self.world.get_blueprint_library().find('sensor.other.lane_invasion'),
+                                        carla.Transform(), attach_to=self.vehicle)
+        self.lane_sensor.listen(lambda event: self._lane_invasion_callback(event))
+
+
+    def add_collision_callback(self, callback):
+        self.collision_callbacks.append(callback)
+
+    def _collision_callback(self, event):
+        for callback in self.collision_callbacks:
+            callback(event)
+
+    def add_lane_invasion_callback(self, callback):
+        self.lane_callbacks.append(callback)
+
+    def _lane_invasion_callback(self, event):
+        for callback in self.lane_callbacks:
+            callback(event)
 
     def add_lidar_callback(self, callback):
         self.custom_lidar_callbacks.append(callback)
