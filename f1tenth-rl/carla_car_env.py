@@ -1,8 +1,3 @@
-import numpy as np
-import os
-import random
-import time
-
 from state import State
 from car.carla.carla_env import CarlaEnv
 
@@ -10,7 +5,9 @@ class CarEnv:
     
     def __init__(self, args):
         self.history_length = args.history_length
-        self.env = CarlaEnv()
+        self.lidar_3d = args.lidar_3d
+        main_sensor = '3d-lidar' if args.lidar_3d else '2d-lidar'
+        self.env = CarlaEnv(main_sensor)
         self.control = self.env.control
         self.sensors = self.env.sensors
         self.safety_control = self.env.safety_control
@@ -72,7 +69,10 @@ class CarEnv:
         self.car_stop_count = 0
 
     def _get_car_state(self):
-        current_data = list(self.sensors.get_lidar_data())
+        if not self.lidar_3d:
+            current_data = self.sensors.get_lidar_data()
+        else:
+            current_data = self.sensors.get_lidar_data()[:, :-1]
         return current_data
 
 
@@ -81,7 +81,10 @@ class CarEnv:
 
 
     def get_state_size(self):
-        return len(self.state.get_data())
+        if not self.lidar_3d:
+            return len(self.state.get_data())
+        else:
+            return (len(self.state.get_data()), self._get_car_state()[0].shape[0])
 
     def get_num_actions(self):
         return len(self.action_set)

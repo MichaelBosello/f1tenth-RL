@@ -26,15 +26,13 @@ except:
 
 DELTA = 0.05
 NO_RENDERING = False
-SHOW_LIDAR = True
+SHOW_LIDAR = False
 SLEEP_RT = True
-
-MAIN_SENSOR = '2d-lidar'
 
 
 class CarlaEnv:
 
-    def __init__(self):
+    def __init__(self, main_sensor):
         self.exit_flag = False
         self.client = carla.Client('localhost', 2000)
         self.client.set_timeout(5.0)
@@ -58,7 +56,7 @@ class CarlaEnv:
         imu_transform = carla.Transform(imu_location,imu_rotation)
         self.imu = self.world.spawn_actor(imu_bp,imu_transform,attach_to=self.vehicle)
 
-        self.sensors = Sensors(self.vehicle, self.world, DELTA, MAIN_SENSOR)
+        self.sensors = Sensors(self.vehicle, self.world, DELTA, main_sensor)
         self.control = Drive(self.vehicle, self.world, self.sensors)
         self.safety_control = SafetyControl(self.control, self.sensors)
 
@@ -87,7 +85,8 @@ class CarlaEnv:
         This function is called by the main thread to update the view of the LIDAR as
         only the main thread can call open3d functions
         '''
-        self.sensors.update_lidar_window()
+        if SHOW_LIDAR:
+            self.sensors.update_lidar_window()
 
     def destroy(self):
         self.exit_flag = True
@@ -100,7 +99,8 @@ class CarlaEnv:
 PRINT_SPEED = False
 
 if __name__ == '__main__':
-    env = CarlaEnv()
+    main_sensor = '3d-lidar'
+    env = CarlaEnv(main_sensor)
     exit_flag = False
 
     def input_thread():
