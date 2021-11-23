@@ -46,6 +46,7 @@ parser.add_argument("--gpu-time", type=float, default=0.011, help="""waiting tim
                                 training takes time and the environment evolves indipendently""")
 parser.add_argument("--slowdown-cycle", type=bool, default=True, help="add a sleep equal to [gpu-time] in the training cycle")
 parser.add_argument("--show-gpu-time", action='store_true', help="it prints the seconds used in one training step, useful to update the above param")
+parser.add_argument("--show-action-time", action='store_true', help="it prints the seconds passed between selection of a new action")
 # lidar pre-processing
 parser.add_argument("--reduce-lidar-data", type=int, default=27, help="lidar data are grouped by taking the min of [reduce-lidar-data] elements")
 parser.add_argument("--cut-lidar-data", type=int, default=10, help="N element at begin and end of lidar data are cutted. Executed after the grouping")
@@ -195,6 +196,15 @@ def run_epoch(min_epoch_steps, eval_with_epsilon=None):
                     action = dqn.inference(state.get_data())
             if args.show_monitor:
                 monitor.update(action, (args.gamepad is False or gamepad.is_autonomous_mode()))
+
+
+            if args.show_action_time:
+                action_time = (datetime.datetime.now() - start_action_time).total_seconds()
+                time_action_list.insert(0, action_time)
+                if len(time_action_list) > 100:
+                    time_action_list = time_action_list[:-1]
+                print("Action time: %fs, Avg time:%fs" % (action_time, np.mean(time_action_list)))
+                start_action_time = datetime.datetime.now()
 
             # we can't skip frames as in a game
             # we need to wait the evolution of the environment, but we don't want to waste GPU time
