@@ -131,6 +131,10 @@ class CarEnv:
         return current_data
 
 
+    def destroy(self):
+        pass
+
+
     def get_state_size(self):
         if self.add_velocity:
             return len(self.state.get_data()[0])
