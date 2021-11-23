@@ -25,6 +25,8 @@ class DeepQNetwork:
 
         self.add_velocity = args.add_velocity
 
+        self.lidar_3d = args.lidar_3d
+
         if not os.path.isdir(self.checkpoint_dir):
             os.makedirs(self.checkpoint_dir)
 
@@ -48,6 +50,8 @@ class DeepQNetwork:
     def __build_q_net(self):
         if self.lidar_to_image:
             return build_cnn2D(self.image_width, self.image_height, self.history_length, self.num_actions, self.learning_rate)
+        elif self.lidar_3d:
+            return build_pointnet(self.state_size[0], self.state_size[1], self.history_length, self.num_actions, self.learning_rate)
         else:
             if self.add_velocity:
                 return build_cnn1D_plus_velocity(self.state_size, self.history_length, self.num_actions, self.learning_rate)
@@ -62,6 +66,8 @@ class DeepQNetwork:
         elif self.add_velocity:
             state[0] = state[0].reshape((-1, self.state_size, self.history_length))
             state[1] = state[1].reshape((-1, self.history_length))
+        elif self.lidar_3d:
+            state = state.reshape((-1, self.state_size[0], self.state_size[1] * self.history_length))
         else:
             state = state.reshape((-1, self.state_size, self.history_length))
 
