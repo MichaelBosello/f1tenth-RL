@@ -39,21 +39,21 @@ parser.add_argument("--batch-size", type=float, default=32, help="size of the ba
 parser.add_argument("--observation-steps", type=int, default=500, help="train only after this many steps (1 step = [history-length] frames)")
 parser.add_argument("--target-model-update-freq", type=int, default=500, help="how often (in steps) to update the target model")
 parser.add_argument("--model", help="tensorflow model directory to initialize from (e.g. run/model)")
-parser.add_argument("--history-length", type=int, default=2, help="(>=1) length of history used in the dqn. An action is performed [history-length] time")
-parser.add_argument("--repeat-action", type=int, default=2, help="(>=0) actions are repeated [repeat-action] times. Unlike history-length, it doesn't increase the network size")
-parser.add_argument("--gpu-time", type=float, default=0.011, help="""waiting time (seconds) between actions when agent is not training (observation steps/evaluation).
+parser.add_argument("--history-length", type=int, default=1, help="(>=1) length of history used in the dqn. An action is performed [history-length] time")
+parser.add_argument("--repeat-action", type=int, default=0, help="(>=0) actions are repeated [repeat-action] times. Unlike history-length, it doesn't increase the network size")
+parser.add_argument("--gpu-time", type=float, default=0.24, help="""waiting time (seconds) between actions when agent is not training (observation steps/evaluation).
                                 It should be the amount of time used by your CPU/GPU to perform a training sweep. It is needed to have the same states and rewards as
                                 training takes time and the environment evolves indipendently""")
-parser.add_argument("--slowdown-cycle", type=bool, default=True, help="add a sleep equal to [gpu-time] in the training cycle")
+parser.add_argument("--slowdown-cycle", type=bool, default=False, help="add a sleep equal to [gpu-time] in the training cycle")
 parser.add_argument("--show-gpu-time", action='store_true', help="it prints the seconds used in one training step, useful to update the above param")
 parser.add_argument("--show-action-time", action='store_true', help="it prints the seconds passed between selection of a new action")
 # lidar pre-processing
-parser.add_argument("--reduce-lidar-data", type=int, default=27, help="lidar data are grouped by taking the min of [reduce-lidar-data] elements")
-parser.add_argument("--cut-lidar-data", type=int, default=10, help="N element at begin and end of lidar data are cutted. Executed after the grouping")
-parser.add_argument("--max-distance-norm", type=float, default=20, help="divide lidar elems by [max-distance-norm] to normalize between [0, 1]")
-parser.add_argument("--lidar-reduction-method", choices=['avg', 'max', 'min', 'sampling'], default='avg', type=str.lower, help="method used to aggregate lidar data")
 parser.add_argument("--lidar-3d", type=bool, default=True, help="if true, the net and states are configured for using 3D point clouds")
 
+parser.add_argument("--reduce-lidar-data", type=int, default=0, help="lidar data are grouped by taking the min of [reduce-lidar-data] elements")
+parser.add_argument("--cut-lidar-data", type=int, default=0, help="N element at begin and end of lidar data are cutted. Executed after the grouping")
+parser.add_argument("--max-distance-norm", type=float, default=0, help="divide lidar elems by [max-distance-norm] to normalize between [0, 1]")
+parser.add_argument("--lidar-reduction-method", choices=['avg', 'max', 'min', 'sampling'], default='', type=str.lower, help="method used to aggregate lidar data")
 parser.add_argument("--lidar-float-cut", type=int, default=-1, help="how many decimals of lidar ranges to take. -1 for no cutting")
 parser.add_argument("--add-velocity", type=bool, default=False, help="if true, it adds the velocity to the state (the NN is extended)")
 
@@ -70,7 +70,7 @@ parser.add_argument("--max-step-limit", type=int, default=2000, help="maximum st
 parser.add_argument("--replay-capacity", type=int, default=100000, help="how many states to store for future training")
 parser.add_argument("--prioritized-replay", action='store_true', help="prioritize interesting states when training (e.g. terminal or non zero rewards)")
 parser.add_argument("--compress-replay", action='store_true', help="if set replay memory will be compressed with blosc, allowing much larger replay capacity")
-parser.add_argument("--save-model-freq", type=int, default=3000, help="save the model every X steps")
+parser.add_argument("--save-model-freq", type=int, default=10000, help="save the model every X steps")
 parser.add_argument("--logging", type=bool, default=True, help="enable tensorboard logging")
 parser.add_argument("--env-logging", type=bool, default=False, help="log state, action, reward of every step to build a dataset for later use")
 parser.add_argument("--gamepad", type=bool, default=False, help="log state, action, reward of every step to build a dataset for later use")
