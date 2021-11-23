@@ -51,6 +51,8 @@ parser.add_argument("--reduce-lidar-data", type=int, default=27, help="lidar dat
 parser.add_argument("--cut-lidar-data", type=int, default=10, help="N element at begin and end of lidar data are cutted. Executed after the grouping")
 parser.add_argument("--max-distance-norm", type=float, default=20, help="divide lidar elems by [max-distance-norm] to normalize between [0, 1]")
 parser.add_argument("--lidar-reduction-method", choices=['avg', 'max', 'min', 'sampling'], default='avg', type=str.lower, help="method used to aggregate lidar data")
+parser.add_argument("--lidar-3d", type=bool, default=True, help="if true, the net and states are configured for using 3D point clouds")
+
 parser.add_argument("--lidar-float-cut", type=int, default=-1, help="how many decimals of lidar ranges to take. -1 for no cutting")
 parser.add_argument("--add-velocity", type=bool, default=False, help="if true, it adds the velocity to the state (the NN is extended)")
 

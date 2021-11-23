@@ -1,6 +1,5 @@
 import numpy as np
 import math
-import time
 
 try:
     import cv2
@@ -21,6 +20,8 @@ class State:
         State.cut_by = args.cut_lidar_data
         State.max_distance_norm = args.max_distance_norm
         State.add_velocity = args.add_velocity
+
+        State.lidar_3d = args.lidar_3d
 
         State.lidar_reduction_method = args.lidar_reduction_method
         State.lidar_float_cut = args.lidar_float_cut
@@ -62,6 +63,8 @@ class State:
             lidar_state = [state[0][0], state[1][0]]
             acc_state = [state[0][1], state[1][1]]
             return [np.asarray(lidar_state).reshape((len(lidar_state[0]), State.history_length)), np.asarray(acc_state)]
+        elif State.lidar_3d:
+            return np.asarray(state).reshape((len(state[0]), len(state[0][0]) * State.history_length))
         else:
             return np.asarray(state).reshape((len(state[0]), State.history_length))
 
