@@ -119,7 +119,7 @@ if __name__ == '__main__':
             if cmd == " ":
                 env.control.stop()
             if cmd == "r":
-                env.control.new_position()
+                env.control.reset_position()
             if cmd == "u":
                 env.safety_control.unlock_brake()
             if cmd == "q":
