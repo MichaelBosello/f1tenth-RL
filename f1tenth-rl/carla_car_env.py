@@ -41,7 +41,7 @@ class CarEnv:
         reward = 0
         if action == 0:
             self.control.forward()
-            reward = 0.01
+            reward = 0.03
         elif action == 1:
             self.control.right()
             reward = 0
