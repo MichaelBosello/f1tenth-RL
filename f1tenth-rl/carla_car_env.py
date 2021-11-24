@@ -7,7 +7,7 @@ class CarEnv:
         self.history_length = args.history_length
         self.lidar_3d = args.lidar_3d
         main_sensor = '3d-lidar' if args.lidar_3d else '2d-lidar'
-        self.env = CarlaEnv(main_sensor)
+        self.env = CarlaEnv(main_sensor, side_sensors=['2d-lidar', 'collision'],)
         self.control = self.env.control
         self.sensors = self.env.sensors
         self.safety_control = self.env.safety_control
@@ -30,7 +30,7 @@ class CarEnv:
 
         if self.safety_control.emergency_brake:
             self.safety_control.disable_safety()
-            self.control.new_position()
+            self.control.reset_position()
             self.safety_control.enable_safety()
             self.safety_control.unlock_brake()
             reward = -1
@@ -70,9 +70,9 @@ class CarEnv:
 
     def _get_car_state(self):
         if not self.lidar_3d:
-            current_data = self.sensors.get_lidar_data()
+            current_data = self.sensors.get_main_sensor_data()
         else:
-            current_data = self.sensors.get_lidar_data()[:, :-1]
+            current_data = self.sensors.get_main_sensor_data()[:, :-1]
         return current_data
 
 

@@ -6,10 +6,12 @@ class SafetyControl():
         self.emergency_brake = False
         self.drive = drive
         self.sensors = sensors
-        if self.sensors.main_sensor == '2d-lidar':
-            self.sensors.add_lidar_callback(self.lidar_callback)
-        self.sensors.add_collision_callback(self.stop_event_callback)
-        self.sensors.add_lane_invasion_callback(self.stop_event_callback)
+        if sensors.main_sensor == '2d-lidar' or '2d-lidar' in sensors.side_sensors:
+            self.sensors.add_2d_lidar_callback(self.lidar_callback)
+        if 'collision' in sensors.side_sensors:
+            self.sensors.add_collision_callback(self.stop_event_callback)
+        if 'lane-invasion' in sensors.side_sensors:
+            self.sensors.add_lane_invasion_callback(self.stop_event_callback)
         self.safety = True
 
     def lidar_callback(self, lidar_data):

@@ -32,7 +32,7 @@ SLEEP_RT = True
 
 class CarlaEnv:
 
-    def __init__(self, main_sensor):
+    def __init__(self, main_sensor, side_sensors):
         self.exit_flag = False
         self.client = carla.Client('localhost', 2000)
         self.client.set_timeout(5.0)
@@ -56,7 +56,7 @@ class CarlaEnv:
         imu_transform = carla.Transform(imu_location,imu_rotation)
         self.imu = self.world.spawn_actor(imu_bp,imu_transform,attach_to=self.vehicle)
 
-        self.sensors = Sensors(self.vehicle, self.world, DELTA, main_sensor)
+        self.sensors = Sensors(self.vehicle, self.world, DELTA, main_sensor, side_sensors)
         self.control = Drive(self.vehicle, self.world, self.sensors)
         self.safety_control = SafetyControl(self.control, self.sensors)
 
@@ -99,8 +99,7 @@ class CarlaEnv:
 PRINT_SPEED = False
 
 if __name__ == '__main__':
-    main_sensor = '3d-lidar'
-    env = CarlaEnv(main_sensor)
+    env = CarlaEnv(main_sensor = '3d-lidar', side_sensors=['2d-lidar', 'collision'])
     exit_flag = False
 
     def input_thread():
