@@ -1,4 +1,10 @@
+try:
+    from car.carla.carla_sensors import *
+except:
+    from carla_sensors import *
+
 EUCLIDEAN_THRESHOLD = 1.8
+EUCLIDEAN_THRESHOLD_MAX_DISTANCE = 10
 FOV_MARGIN = 160
 
 class SafetyControl():
@@ -16,8 +22,9 @@ class SafetyControl():
 
     def lidar_callback(self, lidar_data):
         ranges = lidar_data[FOV_MARGIN:-FOV_MARGIN]
-        if self.safety:
-            if min(ranges) < EUCLIDEAN_THRESHOLD:
+        ranges = list(filter(lambda i: i < LIDAR_2D_RANGE, ranges))
+        if self.safety and len(ranges) > 0:
+            if min(ranges) < EUCLIDEAN_THRESHOLD or min(ranges) > EUCLIDEAN_THRESHOLD_MAX_DISTANCE:
                 self.emergency_brake = True
 
             if self.emergency_brake:
