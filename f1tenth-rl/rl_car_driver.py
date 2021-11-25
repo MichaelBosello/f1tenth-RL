@@ -165,7 +165,6 @@ def run_epoch(min_epoch_steps, eval_with_epsilon=None):
     time_action_list = []
 
     while environment.get_step_number() - step_start < min_epoch_steps and not stop:
-        state_reward = 0
         state = environment.get_state()
         
         episode_losses = []
