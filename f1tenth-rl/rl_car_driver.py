@@ -214,11 +214,11 @@ def run_epoch(min_epoch_steps, eval_with_epsilon=None):
             old_state = state
             for i in range(0, args.history_length * (args.repeat_action + 1)):
 
-                if environment.get_step_number() % args.save_model_freq == 0:
-                    save_net = True
-
                 # Make the move
                 reward, state, is_terminal = environment.step(action)
+
+                if environment.get_step_number() % args.save_model_freq == 0:
+                    save_net = True
 
                 # train
                 if is_training and old_state is not None:
