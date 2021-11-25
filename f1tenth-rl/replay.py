@@ -62,9 +62,11 @@ class ReplayMemory:
             pickle.dump(self.samples, f)
 
     def load(self, file):
-        with open(file, "rb") as f:
-            self.samples = pickle.load(f)
-
+        try:
+            with open(file, "rb") as f:
+                self.samples = pickle.load(f)
+        except:
+            print("No replay buffer found. Starting with an empty replay buffer.")
 
 
 
