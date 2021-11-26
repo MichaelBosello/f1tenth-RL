@@ -6,6 +6,7 @@ class CarEnv:
     def __init__(self, args):
         self.history_length = args.history_length
         self.lidar_3d = args.lidar_3d
+        self.max_step_limit = args.max_step_limit
         main_sensor = '3d-lidar' if args.lidar_3d else '2d-lidar'
         self.env = CarlaEnv(main_sensor, side_sensors=['2d-lidar', 'collision'],)
         self.control = self.env.control
@@ -27,6 +28,11 @@ class CarEnv:
         self.is_terminal = False
         self.step_number += 1
         self.episode_step_number += 1
+
+        if self.episode_step_number >= self.max_step_limit:
+            reward = 0
+            self.is_terminal = True
+            return reward, self.state, self.is_terminal
 
         if self.safety_control.emergency_brake:
             self.safety_control.disable_safety()
