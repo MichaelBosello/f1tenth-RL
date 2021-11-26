@@ -33,7 +33,7 @@ parser.add_argument("--learning-rate", type=float, default=0.00042, help="learni
 parser.add_argument("--gamma", type=float, default=0.98, help="""gamma [0, 1] is the discount factor. It determines the importance of future rewards.
                                 A factor of 0 will make the agent consider only immediate reward, a factor approaching 1 will make it strive for a long-term high reward""")
 parser.add_argument("--epsilon", type=float, default=1, help="]0, 1]for epsilon greedy train")
-parser.add_argument("--epsilon-decay", type=float, default=0.99994, help="]0, 1] every step epsilon = epsilon * decay, in order to decrease constantly")
+parser.add_argument("--epsilon-decay", type=float, default=0.999944, help="]0, 1] every step epsilon = epsilon * decay, in order to decrease constantly")
 parser.add_argument("--epsilon-min", type=float, default=0.1, help="epsilon with decay doesn't fall below epsilon min")
 parser.add_argument("--batch-size", type=float, default=32, help="size of the batch used in gradient descent")
 
@@ -42,7 +42,7 @@ parser.add_argument("--target-model-update-freq", type=int, default=500, help="h
 parser.add_argument("--model", help="tensorflow model directory to initialize from (e.g. run/model)")
 parser.add_argument("--history-length", type=int, default=1, help="(>=1) length of history used in the dqn. An action is performed [history-length] time")
 parser.add_argument("--repeat-action", type=int, default=0, help="(>=0) actions are repeated [repeat-action] times. Unlike history-length, it doesn't increase the network size")
-parser.add_argument("--gpu-time", type=float, default=0.24, help="""waiting time (seconds) between actions when agent is not training (observation steps/evaluation).
+parser.add_argument("--gpu-time", type=float, default=0.2, help="""waiting time (seconds) between actions when agent is not training (observation steps/evaluation).
                                 It should be the amount of time used by your CPU/GPU to perform a training sweep. It is needed to have the same states and rewards as
                                 training takes time and the environment evolves indipendently""")
 parser.add_argument("--slowdown-cycle", type=bool, default=False, help="add a sleep equal to [gpu-time] in the training cycle")

@@ -30,4 +30,4 @@ class Drive():
         self.stop()
         transform = random.choice(self.world.get_map().get_spawn_points())
         self.vehicle.set_transform(transform)
-        time.sleep(1.5)
+        time.sleep(1)
