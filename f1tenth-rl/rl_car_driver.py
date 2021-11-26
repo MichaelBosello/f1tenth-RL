@@ -169,7 +169,7 @@ def run_epoch(min_epoch_steps, eval_with_epsilon=None):
         
         episode_losses = []
         save_net = False
-        while not environment.is_game_over() and not stop and environment.get_episode_step_number() < args.max_step_limit:
+        while not environment.is_game_over() and not stop:
             # epsilon selection and update
             if is_training:
                 epsilon = train_epsilon

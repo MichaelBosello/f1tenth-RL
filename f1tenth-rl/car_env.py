@@ -24,6 +24,7 @@ class CarEnv:
     
     def __init__(self, args):
         self.history_length = args.history_length
+        self.max_step_limit = args.max_step_limit
         self.is_simulator = args.simulator
         self.add_velocity = args.add_velocity
         rospy.init_node('rl_driver')
@@ -45,6 +46,11 @@ class CarEnv:
         self.is_terminal = False
         self.step_number += 1
         self.episode_step_number += 1
+
+        if self.episode_step_number >= self.max_step_limit:
+            reward = 0
+            self.is_terminal = True
+            return reward, self.state, self.is_terminal
 
         if self.safety_control.emergency_brake:
             if self.is_simulator:
