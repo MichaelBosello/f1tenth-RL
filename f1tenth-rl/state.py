@@ -22,6 +22,8 @@ class State:
         State.add_velocity = args.add_velocity
 
         State.lidar_3d = args.lidar_3d
+        State.max_norm = args.max_norm
+        State.min_norm = args.min_norm
 
         State.lidar_reduction_method = args.lidar_reduction_method
         State.lidar_float_cut = args.lidar_float_cut
@@ -69,6 +71,9 @@ class State:
             return np.asarray(state).reshape((len(state[0]), State.history_length))
 
     def process_data(self, data):
+        if State.max_norm - State.min_norm != 0:
+            data = (data - State.min_norm) / (State.max_norm - State.min_norm)
+
         if State.add_velocity:
             lidar_data, acceleration_value = data[:-1], data[-1]
             data = lidar_data

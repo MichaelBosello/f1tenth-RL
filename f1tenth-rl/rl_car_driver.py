@@ -50,6 +50,8 @@ parser.add_argument("--show-gpu-time", action='store_true', help="it prints the 
 parser.add_argument("--show-action-time", action='store_true', help="it prints the seconds passed between selection of a new action")
 # lidar pre-processing
 parser.add_argument("--lidar-3d", type=bool, default=True, help="if true, the net and states are configured for using 3D point clouds")
+parser.add_argument("--max-norm", type=float, default=100, help="normalize np array between [0, 1]")
+parser.add_argument("--min-norm", type=float, default=-100, help="normalize np array between [0, 1]")
 
 parser.add_argument("--reduce-lidar-data", type=int, default=0, help="lidar data are grouped by taking the min of [reduce-lidar-data] elements")
 parser.add_argument("--cut-lidar-data", type=int, default=0, help="N element at begin and end of lidar data are cutted. Executed after the grouping")
