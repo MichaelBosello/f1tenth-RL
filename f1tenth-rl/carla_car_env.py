@@ -30,6 +30,8 @@ class CarEnv:
         self.episode_step_number += 1
 
         if self.episode_step_number >= self.max_step_limit:
+            self.control.reset_position()
+            self.safety_control.unlock_brake()
             reward = 0
             self.is_terminal = True
             return reward, self.state, self.is_terminal
