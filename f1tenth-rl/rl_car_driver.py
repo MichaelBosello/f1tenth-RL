@@ -160,7 +160,6 @@ def run_epoch(min_epoch_steps, eval_with_epsilon=None):
     step_start = environment.get_step_number()
     start_game_number = environment.get_game_number()
     epoch_total_score = 0
-    stuck_count = 0
     time_list = []
     start_action_time = datetime.datetime.now()
     time_action_list = []
@@ -259,15 +258,7 @@ def run_epoch(min_epoch_steps, eval_with_epsilon=None):
             if is_terminal:
                 state = None
 
-            if args.simulator:
-                if reward == -1:
-                    stuck_count = stuck_count + 1
-                else:
-                    stuck_count = 0
-                if stuck_count > 2:
-                    print("Car stuck, resetting simulator position...")
-                    environment.control.reset_position()
-                    stuck_count = 0
+
 
         if save_net:
             dqn.save_network()

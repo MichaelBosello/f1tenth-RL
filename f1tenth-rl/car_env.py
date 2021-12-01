@@ -36,6 +36,7 @@ class CarEnv:
         # available actions
         self.action_set = [0, 1, 2, 3]
 
+        self.stuck_count = 0
         self.game_number = 0
         self.step_number = 0
         self.is_terminal = False
@@ -60,6 +61,10 @@ class CarEnv:
                 self.safety_control.enable_safety()
                 self.safety_control.unlock_brake()
                 time.sleep(0.3)
+                self.stuck_count = self.stuck_count + 1
+                if self.stuck_count > 3:
+                    print("Car stuck, resetting simulator position...")
+                    self.control.reset_position()
             else:
                 self.safety_control.disable_safety()
                 time.sleep(0.6)
@@ -75,6 +80,8 @@ class CarEnv:
             self.is_terminal = True
             self.game_score += reward
             return reward, self.state, self.is_terminal
+
+        self.stuck_count = 0
 
         reward = 0
         if action == 0:
