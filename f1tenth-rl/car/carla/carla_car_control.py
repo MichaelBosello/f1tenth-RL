@@ -3,7 +3,7 @@ import time
 import carla
 
 
-SPEED = 0.4
+SPEED = 0.5
 STEERING_ANGLE = 1
 
 class Drive():

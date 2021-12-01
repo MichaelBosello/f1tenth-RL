@@ -32,7 +32,7 @@ parser.add_argument("--learning-rate", type=float, default=0.00042, help="learni
 parser.add_argument("--gamma", type=float, default=0.98, help="""gamma [0, 1] is the discount factor. It determines the importance of future rewards.
                                 A factor of 0 will make the agent consider only immediate reward, a factor approaching 1 will make it strive for a long-term high reward""")
 parser.add_argument("--epsilon", type=float, default=1, help="]0, 1]for epsilon greedy train")
-parser.add_argument("--epsilon-decay", type=float, default=0.999944, help="]0, 1] every step epsilon = epsilon * decay, in order to decrease constantly")
+parser.add_argument("--epsilon-decay", type=float, default=0.99995, help="]0, 1] every step epsilon = epsilon * decay, in order to decrease constantly")
 parser.add_argument("--epsilon-min", type=float, default=0.1, help="epsilon with decay doesn't fall below epsilon min")
 parser.add_argument("--batch-size", type=float, default=32, help="size of the batch used in gradient descent")
 
@@ -68,7 +68,7 @@ parser.add_argument("--image-zoom", type=int, default=2.4, help="""zoom lidar im
 # train parameters
 parser.add_argument("--train-epoch-steps", type=int, default=3500, help="how many steps (1 step = [history-length] frames) to run during a training epoch")
 parser.add_argument("--eval-epoch-steps", type=int, default=500, help="how many steps (1 step = [history-length] frames) to run during an eval epoch")
-parser.add_argument("--max-step-limit", type=int, default=2000, help="maximum steps that can be done in one episode")
+parser.add_argument("--max-step-limit", type=int, default=1000, help="maximum steps that can be done in one episode")
 parser.add_argument("--replay-capacity", type=int, default=100000, help="how many states to store for future training")
 parser.add_argument("--prioritized-replay", action='store_true', help="prioritize interesting states when training (e.g. terminal or non zero rewards)")
 parser.add_argument("--compress-replay", action='store_true', help="if set replay memory will be compressed with blosc, allowing much larger replay capacity")
