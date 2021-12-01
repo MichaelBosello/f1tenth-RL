@@ -132,7 +132,7 @@ if __name__ == '__main__':
     while exit_flag is False:
         if PRINT_SPEED:
             print("######################################")
-            print(env.get_car_linear_velocity())
+            print(env.sensors.get_car_linear_velocity())
         if SHOW_LIDAR:
             env.update_view()
         else:
