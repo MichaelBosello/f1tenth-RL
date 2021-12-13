@@ -47,7 +47,7 @@ class CarEnv:
             self.game_score += reward
             return reward, self.state, self.is_terminal
 
-        if self.sensors.get_car_linear_velocity() == 0:
+        if self.episode_step_number >= 20 and self.sensors.get_car_linear_velocity() < 0.01:
             self.stuck_count += 1
             if self.stuck_count > 3:
                 self.control.reset_position()
