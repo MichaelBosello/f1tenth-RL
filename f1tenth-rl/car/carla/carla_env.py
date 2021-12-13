@@ -64,6 +64,9 @@ class CarlaEnv:
         process.daemon = True
         process.start()
 
+        time.sleep(1)
+        self.safety_control.unlock_brake()
+
         if SHOW_LIDAR:
             self.sensors.open_lidar_window()
 
