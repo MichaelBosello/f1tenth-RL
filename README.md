@@ -1,9 +1,7 @@
 # F1tenth-RL
 # Train in Austria, Race in Montecarlo: Cross-Track Driving LIDAR equipped F1tenth with Deep RL
 
-[[Thesis](http://amslaurea.unibo.it/21467/)]
-[[Report](http://apice.unibo.it/xwiki/bin/download/Courses/Sa1920Projects-LidarBosello/f1tenth-report.pdf)]
-[[Slides](http://apice.unibo.it/xwiki/bin/download/Courses/Sa1920Projects-LidarBosello/f1tenth-RL-slide.pdf)]
+[[Paper](https://doi.org/10.1109/CCNC49033.2022.9700730)]
 [[Training on the physical car Video](https://youtu.be/ardg7-7Pevw)]
 
 
@@ -25,23 +23,16 @@ Model saving, replay buffer serialization, and tensorboard logging are provided
 
 ## Paper
 
-If you use this repo, please cite my master's thesis
-
-_Updated paper will be published soon_
-
-*Integrating BDI and Reinforcement Learning: the Case Study of Autonomous Driving*
-
-Michael Bosello.
-[[URL](http://amslaurea.unibo.it/21467/)]
+If you use this repo, please cite our paper [[DOI](https://doi.org/10.1109/CCNC49033.2022.9700730)].
 
 ```
-@mastersthesis{amslaurea21467,
-          author = {Michael Bosello},
-           title = {Integrating BDI and Reinforcement Learning: the Case Study of Autonomous Driving},
-             url = {http://amslaurea.unibo.it/21467/},
-          school = {University of Bologna},
-            year = {2020},
-}
+@INPROCEEDINGS{9700730,
+  author={Bosello, Michael and Tse, Rita and Pau, Giovanni},
+  booktitle={2022 IEEE 19th Annual Consumer Communications   Networking Conference (CCNC)}, 
+  title={Train in Austria, Race in Montecarlo: Generalized RL for Cross-Track F1<sup>tenth</sup> LIDAR-Based Races}, 
+  year={2022},
+  pages={290-298},
+  doi={10.1109/CCNC49033.2022.9700730}}
 ```
 
 ## Introduction
