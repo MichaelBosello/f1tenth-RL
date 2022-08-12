@@ -1,3 +1,5 @@
+import time
+
 from state import State
 from car.carla.carla_env import CarlaEnv
 
@@ -38,18 +40,20 @@ class CarEnv:
             return reward, self.state, self.is_terminal
 
         if self.safety_control.emergency_brake:
-            self.safety_control.disable_safety()
-            self.control.reset_position()
-            self.safety_control.enable_safety()
-            self.safety_control.unlock_brake()
+            while self.safety_control.emergency_brake:
+                self.safety_control.disable_safety()
+                self.control.reset_position()
+                self.safety_control.enable_safety()
+                self.safety_control.unlock_brake()
+                time.sleep(0.2)
             reward = -1
             self.is_terminal = True
             self.game_score += reward
             return reward, self.state, self.is_terminal
 
-        if self.episode_step_number >= 20 and self.sensors.get_car_linear_velocity() < 0.01:
+        if self.episode_step_number >= 100 and self.sensors.get_car_linear_velocity() < 0.01:
             self.stuck_count += 1
-            if self.stuck_count > 3:
+            if self.stuck_count > 20:
                 self.control.reset_position()
                 self.safety_control.unlock_brake()
                 reward = 0
@@ -60,7 +64,7 @@ class CarEnv:
         reward = 0
         if action == 0:
             self.control.forward()
-            reward = 0.06
+            reward = 0.01
         elif action == 1:
             self.control.right()
             reward = 0
