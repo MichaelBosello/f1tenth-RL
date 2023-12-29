@@ -59,7 +59,7 @@ Sim2real experiments videos:
 
 + Transfer learning
 
-    Coming soon
+    A video showing how the agent trained on simulation can complete the laps also in the real environment is available [here](https://youtu.be/_upv_2Zc8N0)
 
 ![Evaluation run](img/run.gif)
 
