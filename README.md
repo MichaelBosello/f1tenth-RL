@@ -2,6 +2,7 @@
 # Train in Austria, Race in Montecarlo: Cross-Track Driving LIDAR equipped F1tenth with Deep RL
 
 [[Paper](https://doi.org/10.1109/CCNC49033.2022.9700730)]
+[[Slides](https://michaelbosello.github.io/uploads/slides/presentations/Train_in_Austria_Race_in_Montecarlo.pdf)]
 [[Training on the physical car Video](https://youtu.be/ardg7-7Pevw)]
 
 
